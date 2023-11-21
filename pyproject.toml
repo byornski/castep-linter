@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling", "tree_sitter"]
+requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
@@ -40,9 +40,6 @@ castep-lint = "castep_linter.scan_files:main"
 
 [tool.hatch.version]
 path = "src/castep_linter/__about__.py"
-
-[tool.hatch.build.hooks.custom]
-path = "scripts/build_fortran_lang.py"
 
 [tool.hatch.envs.default]
 dependencies = [
@@ -166,4 +163,3 @@ exclude_lines = [
   "if __name__ == .__main__.:",
   "if TYPE_CHECKING:",
 ]
-
