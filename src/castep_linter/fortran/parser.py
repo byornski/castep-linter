@@ -6,16 +6,14 @@ from typing import Dict, List, Optional, Set, Tuple, Union
 
 from tree_sitter import Language, Node, Parser
 
-
-def get_fortran_parser(parser_compiled="build/fortran.so"):
+def get_fortran_parser():
     """Get a tree-sitter-fortran parser from src"""
 
-    tree_sitter_src_ref = impresources.files("castep_linter") / "tree_sitter_fortran"
+    tree_sitter_so_ref = impresources.files("castep_linter") / "../../build/fortran.so"
 
-    with impresources.as_file(tree_sitter_src_ref) as tree_sitter_src:
-        Language.build_library(parser_compiled, [str(tree_sitter_src)])
+    with impresources.as_file(tree_sitter_so_ref) as tree_sitter_so:
+        fortran_language = Language(tree_sitter_so, "fortran")
 
-    fortran_language = Language(parser_compiled, "fortran")
     parser = Parser()
     parser.set_language(fortran_language)
     return parser
