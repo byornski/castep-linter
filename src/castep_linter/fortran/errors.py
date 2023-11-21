@@ -1,4 +1,5 @@
 """Module to handle errors, warnings and info messages"""
+from collections import Counter
 from dataclasses import dataclass, field
 from typing import Iterator, List
 
@@ -105,3 +106,8 @@ class ErrorLogger:
         for err in self.errors:
             if err.ERROR_SEVERITY >= severity:
                 err.print(self.filename, console)
+
+    def count_errors(self):
+        """Count the number of errors in each category"""
+        c = Counter(e.ERROR_SEVERITY for e in self.errors)
+        return {err_str: c[err_type.ERROR_SEVERITY] for err_str, err_type in FORTRAN_ERRORS.items()}

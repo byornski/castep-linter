@@ -62,11 +62,11 @@ def run_tests_on_code(parser: Parser, code: bytes, test_dict: dict, filename: st
 
 
 def path(arg: str) -> pathlib.Path:
+    """Check a file exists and if so, return a path object"""
     my_file = pathlib.Path(arg)
     if not my_file.is_file():
         raise argparse.ArgumentTypeError(f"The file {arg} does not exist!")
     return my_file
-    
 
 
 def parse_args():
@@ -96,4 +96,10 @@ def main() -> None:
 
         error_log = run_tests_on_code(fortran_parser, raw_text, test_list, str(file))
         error_log.print(console, level=args.level)
-        print(f"{len(error_log.errors)} errors in {file}")
+
+        err_count = error_log.count_errors()
+
+        print(
+            f"{len(error_log.errors)} issues in {file} ({err_count['Error']} errors,"
+            f" {err_count['Warning']} warnings, {err_count['Info']} info)"
+        )
