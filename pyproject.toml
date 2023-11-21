@@ -34,12 +34,15 @@ Documentation = "https://github.com/unknown/castep-linter#readme"
 Issues = "https://github.com/unknown/castep-linter/issues"
 Source = "https://github.com/unknown/castep-linter"
 
-
 [project.scripts]
 castep-lint = "castep_linter.scan_files:main"
 
 [tool.hatch.version]
 path = "src/castep_linter/__about__.py"
+
+[tool.hatch.build.targets.wheel.hooks.autorun]
+dependencies = ["hatch-autorun"]
+file = "src/castep_linter/tree_sitter_fortran/gen.py"
 
 [tool.hatch.envs.default]
 dependencies = [
