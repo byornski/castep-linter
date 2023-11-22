@@ -1,8 +1,8 @@
 """Test that all real values are specified by real(kind=dp)"""
 from tree_sitter import Node
 
-from castep_linter.fortran import VariableDeclaration, parser, FType, ArgType
 from castep_linter.error_logging import ErrorLogger
+from castep_linter.fortran import ArgType, FType, VariableDeclaration, parser
 
 
 @parser.node_type_check("variable_declaration")

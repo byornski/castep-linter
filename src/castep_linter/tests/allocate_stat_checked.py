@@ -1,8 +1,8 @@
 """Test that allocate stat is used and checked"""
 from tree_sitter import Node
 
-from castep_linter.fortran import CallExpression, parser
 from castep_linter.error_logging import ErrorLogger
+from castep_linter.fortran import CallExpression, parser
 
 
 @parser.node_type_check("call_expression")

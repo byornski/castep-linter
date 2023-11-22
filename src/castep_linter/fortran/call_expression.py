@@ -1,10 +1,10 @@
 from typing import ClassVar, List, Optional, Tuple
 
 from tree_sitter import Node
-from castep_linter.fortran.FortranStatementParserBase import FortranStatementParser
 
 from castep_linter.fortran.argument_parser import ArgParser
-
+from castep_linter.fortran.FortranStatementParserBase import \
+    FortranStatementParser
 
 
 class CallExpression(FortranStatementParser):

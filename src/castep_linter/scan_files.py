@@ -6,9 +6,10 @@ from typing import Generator
 from rich.console import Console
 from tree_sitter import Node, Parser, Tree
 
+from castep_linter import error_logging
 from castep_linter.fortran import parser
 from castep_linter.tests import test_list
-from castep_linter import error_logging
+
 
 def traverse_tree(tree: Tree) -> Generator[Node, None, None]:
     """Traverse a tree-sitter tree in a depth first search"""

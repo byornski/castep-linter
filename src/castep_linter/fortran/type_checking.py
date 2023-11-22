@@ -3,6 +3,7 @@ from typing import List, Union
 
 from tree_sitter import Node
 
+
 class WrongNodeError(Exception):
     """Exception thrown when an invalid node is passed to a typed function"""
 

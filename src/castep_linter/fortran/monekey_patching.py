@@ -1,7 +1,9 @@
 from typing import List, Tuple
+
 from tree_sitter import Node
 
 from castep_linter.fortran.type_checking import node_type_check
+
 
 def get_child_by_name(node, typename: str) -> Node:
     """Return the first child node with the requested type"""

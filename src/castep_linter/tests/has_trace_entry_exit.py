@@ -1,10 +1,9 @@
 """Test that a subroutine or function has a trace_entry and trace_exit with the correct name"""
 from tree_sitter import Node
 
-from castep_linter.fortran import (CallExpression, VariableDeclaration, FType,
-                                   parser)
 from castep_linter.error_logging import ErrorLogger
-
+from castep_linter.fortran import (CallExpression, FType, VariableDeclaration,
+                                   parser)
 
 
 @parser.node_type_check("subroutine", "function")

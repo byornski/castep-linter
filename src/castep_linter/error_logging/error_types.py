@@ -1,5 +1,6 @@
 """Module to handle errors, warnings and info messages"""
 from typing import ClassVar
+
 from tree_sitter import Node
 
 

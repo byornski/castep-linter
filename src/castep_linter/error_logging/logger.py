@@ -3,11 +3,10 @@ from collections import Counter
 from dataclasses import dataclass, field
 from typing import Iterator, List
 
-from tree_sitter import Node
 from rich.console import Console
+from tree_sitter import Node
+
 from castep_linter.error_logging import error_types
-
-
 
 
 @dataclass

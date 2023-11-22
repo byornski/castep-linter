@@ -5,8 +5,8 @@ from typing import Dict, List, Tuple, Union
 
 from tree_sitter import Language, Node, Parser
 
-from castep_linter.fortran.type_checking import node_type_check
 import castep_linter.fortran.monekey_patching
+from castep_linter.fortran.type_checking import node_type_check
 
 
 def get_fortran_parser():

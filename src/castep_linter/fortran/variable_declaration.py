@@ -2,11 +2,10 @@ from enum import Enum, auto
 from typing import ClassVar, Dict, List, Optional, Set, Tuple
 
 from tree_sitter import Node
-from castep_linter.fortran.FortranStatementParserBase import FortranStatementParser
 
 from castep_linter.fortran.argument_parser import ArgParser
-
-
+from castep_linter.fortran.FortranStatementParserBase import \
+    FortranStatementParser
 
 
 class FType(Enum):
