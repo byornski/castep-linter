@@ -14,10 +14,8 @@ def test_complex_has_dp(node: Node, error_log: ErrorLogger) -> None:
         try:
             _, arg_value = call_expr.get_arg(position=3, keyword="kind")
         except KeyError:
-            err = "No kind specifier in complex intrinsic"
-            error_log.add_msg('Error', node, err)
+            error_log.add_msg('Error', node, "No kind specifier in complex intrinsic")
             return
 
         if parser.get_code(arg_value, lower=True) != "dp":
-            err = "Invalid kind specifier in complex intrinsic"
-            error_log.add_msg('Error', node, err)
+            error_log.add_msg('Error', node, "Invalid kind specifier in complex intrinsic")

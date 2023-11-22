@@ -249,6 +249,7 @@ def parse_fort_var_names(var_decl_node: Node) -> Dict[str, Optional[str]]:
 
 def parse_string_literal(node: Node) -> str:
     "Parse a string literal object to get the string"
+    assert node_of_type(node, "string_literal")
     return get_code(node).strip("\"'")
 
 
@@ -268,3 +269,22 @@ class VariableDeclaration(FortranStatementParser):
     def get_arg(self, keyword: str, position: Optional[int] = None) -> Tuple[ArgType, Node]:
         """Get an argument from the call expression"""
         return get_arg(self.args, self.kwargs, keyword, position)
+
+
+def add_extra_node_methods():
+    """Add extra methods to node class"""
+    Node.raw = get_code
+    Node.get_child_by_name = get_child_by_name
+    Node.get_children_by_name = get_children_by_name
+    Node.get_child_property = get_child_property
+    Node.split = split_relational_node
+
+    Node.parse_string_literal = parse_string_literal
+
+    Node.get_fortran_subprogram_name = get_fortran_subprogram_name
+
+
+add_extra_node_methods()
+
+#Node.get_call_expression_name = parser.get_call_expression_name
+#Node.split_relational_node = parser.split_relational_node
