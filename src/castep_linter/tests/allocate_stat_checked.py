@@ -1,14 +1,15 @@
 """Test that allocate stat is used and checked"""
 from tree_sitter import Node
-from ..fortran.errors import ErrorLogger
-from ..fortran import parser
+
+from castep_linter.fortran import CallExpression, parser
+from castep_linter.error_logging import ErrorLogger
 
 
+@parser.node_type_check("call_expression")
 def test_allocate_has_stat(node: Node, error_log: ErrorLogger) -> None:
     """Test that allocate stat is used and checked"""
-    assert parser.node_of_type(node, "call_expression")
 
-    routine = parser.CallExpression(node)
+    routine = CallExpression(node)
 
     # Check this is actually an allocate statement
     if routine.name != "allocate":
@@ -19,7 +20,7 @@ def test_allocate_has_stat(node: Node, error_log: ErrorLogger) -> None:
         _, stat_variable = routine.get_arg(keyword="stat")
     except KeyError:
         err = "No stat on allocate statement"
-        error_log.add_msg('Warning', node, err)
+        error_log.add_msg("Warning", node, err)
         return
 
     # Find the next non-comment line
@@ -29,14 +30,13 @@ def test_allocate_has_stat(node: Node, error_log: ErrorLogger) -> None:
 
     # Check if that uses the stat variable
     if next_node and next_node.type == "if_statement":
-
-
         try:
-            relational_expr = next_node.get_child_by_name("parenthesized_expression") \
-                                       .get_child_by_name("relational_expression")
+            relational_expr = next_node.get_child_by_name("parenthesized_expression").get_child_by_name(
+                "relational_expression"
+            )
 
         except KeyError:
-            error_log.add_msg('Error', stat_variable, "Allocate status not checked")
+            error_log.add_msg("Error", stat_variable, "Allocate status not checked")
             return
 
         lhs, rhs = relational_expr.split()
@@ -47,4 +47,4 @@ def test_allocate_has_stat(node: Node, error_log: ErrorLogger) -> None:
         if rhs.type == "identifier" and rhs.text.lower() == stat_variable.text.lower():
             return
 
-    error_log.add_msg('Error', stat_variable, "Allocate status not checked")
+    error_log.add_msg("Error", stat_variable, "Allocate status not checked")

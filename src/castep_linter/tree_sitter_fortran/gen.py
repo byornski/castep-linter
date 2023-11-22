@@ -1,6 +1,6 @@
-import importlib.resources
+from importlib.resources import as_file, files
+
 from tree_sitter import Language
-from importlib.resources import files, as_file
 
 file_ref = files("castep_linter") / "tree_sitter_fortran"
 with as_file(file_ref) as tree_sitter_dir:

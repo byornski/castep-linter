@@ -1,21 +1,23 @@
 """Test that a call of complex(x) has a dp"""
 from tree_sitter import Node
-from ..fortran.errors import ErrorLogger
-from ..fortran import parser
+
+from castep_linter.fortran import CallExpression, parser
+from castep_linter.error_logging import ErrorLogger
 
 
+
+@parser.node_type_check("call_expression")
 def test_complex_has_dp(node: Node, error_log: ErrorLogger) -> None:
     """Test that a call of complex(x) has a dp"""
-    assert parser.node_of_type(node, "call_expression")
 
-    call_expr = parser.CallExpression(node)
+    call_expr = CallExpression(node)
 
     if call_expr.name == "cmplx":
         try:
             _, arg_value = call_expr.get_arg(position=3, keyword="kind")
         except KeyError:
-            error_log.add_msg('Error', node, "No kind specifier in complex intrinsic")
+            error_log.add_msg("Error", node, "No kind specifier in complex intrinsic")
             return
 
-        if parser.get_code(arg_value, lower=True) != "dp":
-            error_log.add_msg('Error', node, "Invalid kind specifier in complex intrinsic")
+        if arg_value.raw(lower=True) != "dp":
+            error_log.add_msg("Error", node, "Invalid kind specifier in complex intrinsic")

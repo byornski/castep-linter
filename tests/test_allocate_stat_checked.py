@@ -1,7 +1,8 @@
 # pylint: disable=W0621,C0116,C0114
 import pytest
-from castep_linter.fortran.parser import get_fortran_parser
+
 from castep_linter import tests
+from castep_linter.fortran.parser import get_fortran_parser
 from castep_linter.scan_files import run_tests_on_code
 
 

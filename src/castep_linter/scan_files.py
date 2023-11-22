@@ -2,25 +2,23 @@
 import argparse
 import pathlib
 from typing import Generator
+
 from rich.console import Console
 from tree_sitter import Node, Parser, Tree
-from .fortran.errors import FORTRAN_ERRORS, ErrorLogger
-from .fortran.parser import get_fortran_parser, is_fortran_subprogram
-from .tests import test_list
 
+from castep_linter.fortran import parser
+from castep_linter.tests import test_list
+from castep_linter import error_logging
 
 def traverse_tree(tree: Tree) -> Generator[Node, None, None]:
     """Traverse a tree-sitter tree in a depth first search"""
     cursor = tree.walk()
-    fn_context = []
 
     reached_root = False
     while not reached_root:
         yield cursor.node
 
         if cursor.goto_first_child():
-            if is_fortran_subprogram(cursor.node.parent):
-                fn_context.append(cursor.node.parent)
             continue
 
         if cursor.goto_next_sibling():
@@ -29,8 +27,6 @@ def traverse_tree(tree: Tree) -> Generator[Node, None, None]:
         retracing = True
         while retracing:
             if not cursor.goto_parent():
-                if is_fortran_subprogram(cursor.node):
-                    fn_context.pop()
                 retracing = False
                 reached_root = True
 
@@ -46,10 +42,12 @@ def traverse_tree(tree: Tree) -> Generator[Node, None, None]:
 # tabs & DOS line endings, whitespace, comments?
 
 
-def run_tests_on_code(parser: Parser, code: bytes, test_dict: dict, filename: str) -> ErrorLogger:
+def run_tests_on_code(
+    fort_parser: Parser, code: bytes, test_dict: dict, filename: str
+) -> error_logging.ErrorLogger:
     """Run all available tests on the supplied source code"""
-    tree = parser.parse(code)
-    error_log = ErrorLogger(filename)
+    tree = fort_parser.parse(code)
+    error_log = error_logging.ErrorLogger(filename)
 
     for node in traverse_tree(tree):
         # Have to check for is_named here as we want the statements,
@@ -65,29 +63,30 @@ def path(arg: str) -> pathlib.Path:
     """Check a file exists and if so, return a path object"""
     my_file = pathlib.Path(arg)
     if not my_file.is_file():
-        raise argparse.ArgumentTypeError(f"The file {arg} does not exist!")
+        err = f"The file {arg} does not exist!"
+        raise argparse.ArgumentTypeError(err)
     return my_file
 
 
 def parse_args():
     """Parse the command line args for a message print level and a list of filenames"""
-    parser = argparse.ArgumentParser(prog="castep-linter", description="Code linter for CASTEP")
-    parser.add_argument(
+    arg_parser = argparse.ArgumentParser(prog="castep-linter", description="Code linter for CASTEP")
+    arg_parser.add_argument(
         "-l",
         "--level",
         help="Error message level",
         default="Info",
-        choices=FORTRAN_ERRORS.keys(),
+        choices=error_logging.FORTRAN_ERRORS.keys(),
     )
-    parser.add_argument("file", nargs="+", type=path)
-    return parser.parse_args()
+    arg_parser.add_argument("file", nargs="+", type=path)
+    return arg_parser.parse_args()
 
 
 def main() -> None:
     """Main entry point for the CASTEP linter"""
     args = parse_args()
 
-    fortran_parser = get_fortran_parser()
+    fortran_parser = parser.get_fortran_parser()
     console = Console()
 
     for file in args.file:
@@ -95,7 +94,7 @@ def main() -> None:
             raw_text = fd.read()
 
         error_log = run_tests_on_code(fortran_parser, raw_text, test_list, str(file))
-        error_log.print(console, level=args.level)
+        error_log.printc(console, level=args.level)
 
         err_count = error_log.count_errors()
 

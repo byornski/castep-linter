@@ -1,14 +1,14 @@
 # pylint: disable=W0621,C0116,C0114
 import pytest
-from castep_linter.fortran.parser import get_fortran_parser
+
 from castep_linter import tests
+from castep_linter.fortran.parser import get_fortran_parser
 from castep_linter.scan_files import run_tests_on_code
 
 
 @pytest.fixture
 def test_list():
-    return {"subroutine": [tests.test_trace_entry_exit]}
-
+    return {"subroutine": [tests.test_trace_entry_exit], "function": [tests.test_trace_entry_exit]}
 
 @pytest.fixture
 def parser():
@@ -198,3 +198,26 @@ def test_trace_entry_exit_correct_by_param_all_caps(parser, test_list):
     """
     error_log = run_tests_on_code(parser, wrapped_code, test_list, "filename")
     assert len(error_log.errors) == 0
+
+def test_trace_entry_exit_correct_function(parser, test_list):
+    wrapped_code = b"""
+    module foo
+    function X(Y)
+    CALL TRACE_ENTRY("x", STAT)
+    CALL TRACE_EXIT("x", STAT)
+    end function X
+    end module foo
+    """
+    error_log = run_tests_on_code(parser, wrapped_code, test_list, "filename")
+    assert len(error_log.errors) == 0
+
+
+def test_trace_entry_exit_missing_function(parser, test_list):
+    wrapped_code = b"""
+    module foo
+    function X(Y)
+    end function X
+    end module foo
+    """
+    error_log = run_tests_on_code(parser, wrapped_code, test_list, "filename")
+    assert len(error_log.errors) == 2
