@@ -79,7 +79,9 @@ def parse_args():
         default="Info",
         choices=error_logging.FORTRAN_ERRORS.keys(),
     )
-    arg_parser.add_argument("file", nargs="+", type=path)
+    arg_parser.add_argument("-x", "--xml", type=path, help="File for JUnit xml output if required")
+    arg_parser.add_argument("-q", "--quiet", action="store_true", help="Do not write to console")
+    arg_parser.add_argument("file", nargs="+", type=path, help="Files to scan")
     return arg_parser.parse_args()
 
 
@@ -95,11 +97,13 @@ def main() -> None:
             raw_text = fd.read()
 
         error_log = run_tests_on_code(fortran_parser, raw_text, test_list, str(file))
-        error_log.printc(console, level=args.level)
 
-        err_count = error_log.count_errors()
+        if not args.quiet:
+            error_log.printc(console, level=args.level)
 
-        print(
-            f"{len(error_log.errors)} issues in {file} ({err_count['Error']} errors,"
-            f" {err_count['Warning']} warnings, {err_count['Info']} info)"
-        )
+            err_count = error_log.count_errors()
+
+            print(
+                f"{len(error_log.errors)} issues in {file} ({err_count['Error']} errors,"
+                f" {err_count['Warn']} warnings, {err_count['Info']} info)"
+            )
