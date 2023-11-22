@@ -19,7 +19,13 @@ class FortranMsgBase:
 
     def print_err(self, filename: str, console) -> None:
         """Print the error to the supplied console"""
-        console.print(f"{self.ERROR_TYPE}: {self.message}", style=self.ERROR_STYLE)
+        console.print(self, style=self.ERROR_STYLE)
+        context = self.context(filename, underline=True)
+        if context:
+            console.print(context)
+
+    def context(self, filename, underline=False):
+        context = ""
 
         with open(filename, "rb") as fd:
             start_line, start_char = self.start_point
@@ -31,13 +37,19 @@ class FortranMsgBase:
 
             if num_lines == 1:
                 line = fd.read().splitlines()[start_line].decode(errors="replace")
-                console.print(f"{file_str}:{start_line+1:{self.LINE_NUMBER_OFFSET}}>{line}")
-                console.print(
-                    " " * (len(file_str) + 1)
-                    + " " * (self.LINE_NUMBER_OFFSET + 1)
-                    + " " * start_char
-                    + "^" * num_chars
-                )
+                context = f"{file_str}:{start_line+1:{self.LINE_NUMBER_OFFSET}}>{line}"
+                if underline:
+                    context += (
+                        "\n"
+                        + " " * (len(file_str) + 1)
+                        + " " * (self.LINE_NUMBER_OFFSET + 1)
+                        + " " * start_char
+                        + "^" * num_chars
+                    )
+        return context
+
+    def __repr__(self):
+        return f"{self.ERROR_TYPE}: {self.message}"
 
 
 class FortranError(FortranMsgBase):
@@ -76,6 +88,7 @@ def new_fortran_error(level: str, node: Node, message: str) -> FortranMsgBase:
     else:
         raise ValueError("Unknown fortran diagnostic message type: " + level)
     return cls(node, message)
+
 
 FORTRAN_ERRORS = {
     "Error": FortranError,

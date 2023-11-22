@@ -27,6 +27,7 @@ classifiers = [
 dependencies = [
   "rich",
   "tree_sitter",
+  "junitparser",
 ]
 
 [project.urls]

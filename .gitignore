@@ -3,3 +3,4 @@ __pycache__
 fortran.so
 *~
 dist
+*.xml

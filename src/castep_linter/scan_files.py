@@ -7,6 +7,7 @@ from rich.console import Console
 from tree_sitter import Node, Parser, Tree
 
 from castep_linter import error_logging
+from castep_linter.error_logging.xml_writer import write_xml
 from castep_linter.fortran import parser
 from castep_linter.tests import test_list
 
@@ -79,7 +80,7 @@ def parse_args():
         default="Info",
         choices=error_logging.FORTRAN_ERRORS.keys(),
     )
-    arg_parser.add_argument("-x", "--xml", type=path, help="File for JUnit xml output if required")
+    arg_parser.add_argument("-x", "--xml", type=pathlib.Path, help="File for JUnit xml output if required")
     arg_parser.add_argument("-q", "--quiet", action="store_true", help="Do not write to console")
     arg_parser.add_argument("file", nargs="+", type=path, help="Files to scan")
     return arg_parser.parse_args()
@@ -91,6 +92,8 @@ def main() -> None:
 
     fortran_parser = parser.get_fortran_parser()
     console = Console()
+
+    error_logs = {}
 
     for file in args.file:
         with file.open("rb") as fd:
@@ -107,3 +110,8 @@ def main() -> None:
                 f"{len(error_log.errors)} issues in {file} ({err_count['Error']} errors,"
                 f" {err_count['Warn']} warnings, {err_count['Info']} info)"
             )
+    
+        error_logs[str(file)] = error_log
+
+    if args.xml:
+        write_xml(args.xml, error_logs)
