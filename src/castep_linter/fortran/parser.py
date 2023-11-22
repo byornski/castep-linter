@@ -138,7 +138,7 @@ class FType(Enum):
     OTHER = auto()
 
 
-def split_relational_node(node: Node) -> (Node, Node):
+def split_relational_node(node: Node) -> Tuple[Node, Node]:
     """Split a relational node with a left and right part into the two child nodes"""
     left = node.child_by_field_name("left")
     assert left is not None, f"LHS of expression is none: {get_code(node)}"
@@ -188,11 +188,11 @@ class CallExpression(FortranStatementParser):
         self.name = get_call_expression_name(call_expression_node)
         try:
             arg_list = get_child_property(call_expression_node, "argument_list")
+            self.args, self.kwargs = parse_arg_list(arg_list, lower=True)
         except KeyError:
             self.args = []
             self.kwargs = {}
-        else:
-            self.args, self.kwargs = parse_arg_list(arg_list, lower=True)
+
 
     def get_arg(self, keyword: str, position: Optional[int] = None) -> Tuple[ArgType, Node]:
         """Get an argument from the call expression"""
@@ -223,7 +223,7 @@ def parse_fort_type_qualifiers(var_decl_node: Node) -> Set[str]:
     return qualifiers
 
 
-def parse_fort_var_size(var_decl_node: Node) -> Optional[str]:
+def parse_fort_var_size(var_decl_node: Node) -> Tuple[List[Node], Dict[str, Node]]:
     """Parse a variable declaration for a size, eg kind=8"""
     try:
         fortran_size = get_child_property(var_decl_node, "size")
@@ -236,12 +236,12 @@ def parse_fort_var_size(var_decl_node: Node) -> Optional[str]:
 
 def parse_fort_var_names(var_decl_node: Node) -> Dict[str, Optional[str]]:
     """Parse variable declaration statement for variables and optionally assignments"""
-    myvars = {}
+    myvars: Dict[str, Optional[str]] = {}
     for assignment in get_children_by_name(var_decl_node, "assignment_statement"):
         lhs, rhs = split_relational_node(assignment)
         varname = get_code(lhs, lower=True)
         if rhs.type == "string_literal":
-            myvars[varname] = parse_string_literal(rhs)
+            myvars[varname]= parse_string_literal(rhs)
         else:
             myvars[varname] = None
     return myvars

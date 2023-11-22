@@ -1,7 +1,7 @@
 """Module to handle errors, warnings and info messages"""
 from collections import Counter
 from dataclasses import dataclass, field
-from typing import Iterator, List
+from typing import Iterator, List, ClassVar, Union
 
 from rich.console import Console
 from tree_sitter import Node
@@ -10,10 +10,10 @@ from tree_sitter import Node
 class FortranMsgBase:
     """Base class for other static analysis problems to inherit from"""
 
-    ERROR_TYPE = "NONE"
-    ERROR_STYLE = "grey"
+    ERROR_TYPE: ClassVar[str] = "NONE"
+    ERROR_STYLE: ClassVar[str]  = "grey"
     LINE_NUMBER_OFFSET = 8
-    ERROR_SEVERITY = 100
+    ERROR_SEVERITY: ClassVar[int] = 100
 
     def __init__(self, node: Node, message: str) -> None:
         self.message = message
@@ -46,29 +46,30 @@ class FortranMsgBase:
 class FortranError(FortranMsgBase):
     """Fatal static analysis problem in code"""
 
-    ERROR_TYPE = "ERROR"
-    ERROR_STYLE = "red"
-    ERROR_SEVERITY = 2
+    ERROR_TYPE: ClassVar[str] = "ERROR"
+    ERROR_STYLE: ClassVar[str]  = "red"
+    ERROR_SEVERITY: ClassVar[int] = 2
 
 
 class FortranWarning(FortranMsgBase):
     """Warning message from static analysis"""
 
-    ERROR_TYPE = "Warning"
-    ERROR_STYLE = "yellow"
-    ERROR_SEVERITY = 1
+    ERROR_TYPE: ClassVar[str]  = "Warning"
+    ERROR_STYLE: ClassVar[str]  = "yellow"
+    ERROR_SEVERITY: ClassVar[int] = 1
 
 
 class FortranInfo(FortranMsgBase):
     """Warning message from static analysis"""
 
-    ERROR_TYPE = "Info"
-    ERROR_STYLE = "Blue"
-    ERROR_SEVERITY = 0
+    ERROR_TYPE: ClassVar[str]  = "Info"
+    ERROR_STYLE: ClassVar[str]  = "Blue"
+    ERROR_SEVERITY: ClassVar[int] = 0
 
 
 def new_fortran_error(level: str, node: Node, message: str) -> FortranMsgBase:
     """Generate a new fortran diagnostic message"""
+    cls = FortranMsgBase
     if level == "Error":
         cls = FortranError
     elif level == "Warning":
