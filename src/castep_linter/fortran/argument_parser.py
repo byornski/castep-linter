@@ -1,5 +1,4 @@
-
-
+"""Module containing an argument list parser"""
 from enum import Enum, auto
 from typing import ClassVar, List, Optional
 
@@ -18,6 +17,7 @@ class ArgType(Enum):
 
 class ArgParser:
     """Parser for fortran argument lists"""
+
     ALLOWED_NODES: ClassVar[List[str]] = ["argument_list"]
     ArgType = ArgType
 

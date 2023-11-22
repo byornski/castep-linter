@@ -79,6 +79,6 @@ def new_fortran_error(level: str, node: Node, message: str) -> FortranMsgBase:
 
 FORTRAN_ERRORS = {
     "Error": FortranError,
-    "Warning": FortranWarning,
+    "Warn": FortranWarning,
     "Info": FortranInfo,
 }

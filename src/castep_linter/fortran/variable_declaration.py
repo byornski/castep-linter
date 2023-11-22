@@ -1,3 +1,4 @@
+"""Module holding the VariableDeclaration type"""
 from enum import Enum, auto
 from typing import ClassVar, Dict, List, Optional, Set, Tuple
 

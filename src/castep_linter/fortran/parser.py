@@ -1,12 +1,14 @@
 """Tests for Fortran code in CASTEP"""
-import functools
 from importlib import resources as impresources
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple
 
 from tree_sitter import Language, Node, Parser
 
-import castep_linter.fortran.monekey_patching
+import castep_linter.fortran.monekey_patching as mp
 from castep_linter.fortran.type_checking import node_type_check
+
+# Monkey patch extra methods on node to get useful things like get_child_by_name
+mp.add_extra_node_methods()
 
 
 def get_fortran_parser():
@@ -28,15 +30,6 @@ FORTRAN_CONTEXTS = {
     "submodule": "submodule_statement.name",
     "program": "program_statement.name",
 }
-
-
-
-
-
-@node_type_check(*FORTRAN_CONTEXTS.keys())
-def get_fortran_subprogram_name(node: Node) -> str:
-    """Gets the name of a fortran context"""
-    return 
 
 
 @node_type_check("argument_list")
@@ -66,7 +59,3 @@ def parse_arg_list(node: Node) -> Tuple[List[Node], Dict[str, Node]]:
             raise ValueError(err)
 
     return args, kwargs
-
-
-
-

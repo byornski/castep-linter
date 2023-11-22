@@ -1,3 +1,5 @@
+"""Module to monkey patch tree_sitter Nodes to add useful functionality. As these
+are extension modules/types, they cannot be extended by inheritance!"""
 from typing import List, Tuple
 
 from tree_sitter import Node
@@ -29,7 +31,6 @@ def get_child_property(node, prop: str) -> Node:
     return cursor
 
 
-
 def split_relational_node(node: Node) -> Tuple[Node, Node]:
     """Split a relational node with a left and right part into the two child nodes"""
     left = node.child_by_field_name("left")
@@ -55,12 +56,10 @@ def get_code(node: Node, *, lower=False) -> str:
         return node.text.decode()
 
 
-
 @node_type_check("string_literal")
 def parse_string_literal(node: Node) -> str:
     "Parse a string literal object to get the string"
     return node.raw().strip("\"'")
-
 
 
 def add_extra_node_methods():
@@ -74,4 +73,3 @@ def add_extra_node_methods():
 
 
 add_extra_node_methods()
-

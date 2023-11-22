@@ -1,3 +1,4 @@
+""""Module with base class for Fortran code parser classes"""
 from typing import ClassVar, List
 
 from tree_sitter import Node
