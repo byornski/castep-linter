@@ -5,8 +5,7 @@ from typing import ClassVar, Dict, List, Optional, Set, Tuple
 from tree_sitter import Node
 
 from castep_linter.fortran.argument_parser import ArgParser
-from castep_linter.fortran.FortranStatementParserBase import \
-    FortranStatementParser
+from castep_linter.fortran.fortran_statement import FortranStatementParser
 
 
 class FType(Enum):
@@ -79,8 +78,6 @@ class VariableDeclaration(FortranStatementParser):
         self.vars = parse_fort_var_names(var_decl_node)
         self.args = parse_fort_var_size(var_decl_node)
 
-    def get_arg(
-        self, keyword: str, position: Optional[int] = None
-    ) -> Tuple[ArgParser.ArgType, Node]:
+    def get_arg(self, keyword: str, position: Optional[int] = None) -> Tuple[ArgParser.ArgType, Node]:
         """Get an argument from the call expression"""
         return self.args.get(keyword, position)

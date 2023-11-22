@@ -24,7 +24,8 @@ class FortranMsgBase:
         if context:
             console.print(context)
 
-    def context(self, filename, underline=False):
+    def context(self, filename, *, underline=False):
+        """Print a line of context for the current error"""
         context = ""
 
         with open(filename, "rb") as fd:
@@ -95,3 +96,5 @@ FORTRAN_ERRORS = {
     "Warn": FortranWarning,
     "Info": FortranInfo,
 }
+
+ERROR_SEVERITY = {k: v.ERROR_SEVERITY for k, v in FORTRAN_ERRORS.items()}

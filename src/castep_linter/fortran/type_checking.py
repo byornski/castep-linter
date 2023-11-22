@@ -19,7 +19,7 @@ def node_type_check(*types: List[str]):
                 err = f"Wrong node type passed: {node.type} when {types} was expected"
                 raise WrongNodeError(err)
             if not node_of_type(node, types):
-                err = "Wrong node type passed: unnamed " f" ({node.type}) when {types} was expected"
+                err = f"Wrong node type passed: unnamed ({node.type}) when {types} was expected"
                 raise WrongNodeError(err)
             return func(node, *args, **kwargs)
 

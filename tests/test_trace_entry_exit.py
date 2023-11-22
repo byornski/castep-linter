@@ -10,6 +10,7 @@ from castep_linter.scan_files import run_tests_on_code
 def test_list():
     return {"subroutine": [tests.test_trace_entry_exit], "function": [tests.test_trace_entry_exit]}
 
+
 @pytest.fixture
 def parser():
     return get_fortran_parser()
@@ -198,6 +199,7 @@ def test_trace_entry_exit_correct_by_param_all_caps(parser, test_list):
     """
     error_log = run_tests_on_code(parser, wrapped_code, test_list, "filename")
     assert len(error_log.errors) == 0
+
 
 def test_trace_entry_exit_correct_function(parser, test_list):
     wrapped_code = b"""

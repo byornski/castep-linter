@@ -1,6 +1,7 @@
 """Static code analysis tool for castep"""
 import argparse
 import pathlib
+import sys
 from typing import Generator
 
 from rich.console import Console
@@ -44,9 +45,7 @@ def traverse_tree(tree: Tree) -> Generator[Node, None, None]:
 # tabs & DOS line endings, whitespace, comments?
 
 
-def run_tests_on_code(
-    fort_parser: Parser, code: bytes, test_dict: dict, filename: str
-) -> error_logging.ErrorLogger:
+def run_tests_on_code(fort_parser: Parser, code: bytes, test_dict: dict, filename: str) -> error_logging.ErrorLogger:
     """Run all available tests on the supplied source code"""
     tree = fort_parser.parse(code)
     error_log = error_logging.ErrorLogger(filename)
@@ -78,7 +77,7 @@ def parse_args():
         "--level",
         help="Error message level",
         default="Info",
-        choices=error_logging.FORTRAN_ERRORS.keys(),
+        choices=error_logging.ERROR_SEVERITY.keys(),
     )
     arg_parser.add_argument("-x", "--xml", type=pathlib.Path, help="File for JUnit xml output if required")
     arg_parser.add_argument("-q", "--quiet", action="store_true", help="Do not write to console")
@@ -91,7 +90,7 @@ def main() -> None:
     args = parse_args()
 
     fortran_parser = parser.get_fortran_parser()
-    console = Console()
+    console = Console(soft_wrap=True)
 
     error_logs = {}
 
@@ -102,16 +101,21 @@ def main() -> None:
         error_log = run_tests_on_code(fortran_parser, raw_text, test_list, str(file))
 
         if not args.quiet:
-            error_log.printc(console, level=args.level)
+            error_log.print_errors(console, level=args.level)
 
             err_count = error_log.count_errors()
 
-            print(
+            console.print(
                 f"{len(error_log.errors)} issues in {file} ({err_count['Error']} errors,"
                 f" {err_count['Warn']} warnings, {err_count['Info']} info)"
             )
-    
+
         error_logs[str(file)] = error_log
 
     if args.xml:
-        write_xml(args.xml, error_logs)
+        write_xml(args.xml, error_logs, error_logging.ERROR_SEVERITY[args.level])
+
+    if any(e.has_errors for e in error_logs.values()):
+        sys.exit(1)
+    else:
+        sys.exit(0)

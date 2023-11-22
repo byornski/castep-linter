@@ -4,7 +4,7 @@ from typing import ClassVar, List, Optional, Tuple
 from tree_sitter import Node
 
 from castep_linter.fortran.argument_parser import ArgParser
-from castep_linter.fortran.FortranStatementParserBase import FortranStatementParser
+from castep_linter.fortran.fortran_statement import FortranStatementParser
 
 
 class CallExpression(FortranStatementParser):
@@ -23,9 +23,7 @@ class CallExpression(FortranStatementParser):
         else:
             self.args = ArgParser(arg_list)
 
-    def get_arg(
-        self, keyword: str, position: Optional[int] = None
-    ) -> Tuple[ArgParser.ArgType, Node]:
+    def get_arg(self, keyword: str, position: Optional[int] = None) -> Tuple[ArgParser.ArgType, Node]:
         """Get an argument from the call expression"""
         return self.args.get(keyword, position)
 

@@ -2,8 +2,7 @@
 from tree_sitter import Node
 
 from castep_linter.error_logging import ErrorLogger
-from castep_linter.fortran import (CallExpression, FType, VariableDeclaration,
-                                   parser)
+from castep_linter.fortran import CallExpression, FType, VariableDeclaration, parser
 
 
 @parser.node_type_check("subroutine", "function")
