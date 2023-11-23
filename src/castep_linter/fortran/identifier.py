@@ -20,6 +20,8 @@ class Identifier:
         return hash(self.lower_name)
 
     def __eq__(self, other):
+        if other is None:
+            return False
         if isinstance(other, str):
             return self.lower_name == other.lower()
         if isinstance(other, Identifier):

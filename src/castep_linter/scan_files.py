@@ -2,6 +2,7 @@
 import argparse
 import pathlib
 import sys
+import logging
 
 from rich.console import Console
 from tree_sitter import Parser
@@ -59,6 +60,7 @@ def parse_args():
         "-x", "--xml", type=pathlib.Path, help="File for JUnit xml output if required"
     )
     arg_parser.add_argument("-q", "--quiet", action="store_true", help="Do not write to console")
+    arg_parser.add_argument("-d", "--debug", action="store_true", help="Turn on debug output")
     arg_parser.add_argument("file", nargs="+", type=path, help="Files to scan")
     return arg_parser.parse_args()
 
@@ -70,13 +72,21 @@ def main() -> None:
     fortran_parser = parser.get_fortran_parser()
     console = Console(soft_wrap=True)
 
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+
     error_logs = {}
 
     for file in args.file:
         with file.open("rb") as fd:
             raw_text = fd.read()
 
-        error_log = run_tests_on_code(fortran_parser, raw_text, test_list, str(file))
+        try:
+            error_log = run_tests_on_code(fortran_parser, raw_text, test_list, str(file))
+        except UnicodeDecodeError:
+            logging.error("Failed to properly decode %s", file)
+            raise
+
 
         if not args.quiet:
             error_log.print_errors(console, level=args.level)
