@@ -19,7 +19,9 @@ from castep_linter.tests import test_list
 # tabs & DOS line endings, whitespace, comments?
 
 
-def run_tests_on_code(fort_parser: Parser, code: bytes, test_dict: dict, filename: str) -> error_logging.ErrorLogger:
+def run_tests_on_code(
+    fort_parser: Parser, code: bytes, test_dict: dict, filename: str
+) -> error_logging.ErrorLogger:
     """Run all available tests on the supplied source code"""
     tree = fort_parser.parse(code)
     error_log = error_logging.ErrorLogger(filename)
@@ -53,7 +55,9 @@ def parse_args():
         default="Info",
         choices=error_logging.ERROR_SEVERITY.keys(),
     )
-    arg_parser.add_argument("-x", "--xml", type=pathlib.Path, help="File for JUnit xml output if required")
+    arg_parser.add_argument(
+        "-x", "--xml", type=pathlib.Path, help="File for JUnit xml output if required"
+    )
     arg_parser.add_argument("-q", "--quiet", action="store_true", help="Do not write to console")
     arg_parser.add_argument("file", nargs="+", type=path, help="Files to scan")
     return arg_parser.parse_args()

@@ -36,7 +36,9 @@ class ErrorLogger:
     def count_errors(self):
         """Count the number of errors in each category"""
         c = Counter(e.ERROR_SEVERITY for e in self.errors)
-        return {err_str: c[err_severity] for err_str, err_severity in error_types.ERROR_SEVERITY.items()}
+        return {
+            err_str: c[err_severity] for err_str, err_severity in error_types.ERROR_SEVERITY.items()
+        }
 
     def __len__(self):
         return len(self.errors)

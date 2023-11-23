@@ -1,27 +1,31 @@
 """Test that a number literal has a dp (if real) or no dp if of any other type"""
 from castep_linter.error_logging import ErrorLogger
-from castep_linter.fortran import parser
-from castep_linter.fortran.fortran_node import FortranNode
+from castep_linter.fortran.fortran_node import Fortran, FortranNode, WrongNodeError
+from castep_linter.tests import castep_identifiers
 
 
-@parser.node_type_check("number_literal")
 def test_number_literal(node: FortranNode, error_log: ErrorLogger) -> None:
     """Test that a number literal has a dp (if real) or no dp if of any other type"""
 
-    def is_int(x: str) -> bool:
-        return not any(c in x.lower() for c in [".", "e", "d"])
+    if not node.is_type(Fortran.NUMBER_LITERAL):
+        err = "Expected number literal node"
+        raise WrongNodeError(err)
 
-    literal_string = node.raw(lower=True)
+    literal_string = node.raw.lower()
 
     if "_" in literal_string:
         value, kind = literal_string.split("_", maxsplit=1)
 
         if is_int(value):
             error_log.add_msg("Error", node, f"Integer literal with {kind=}")
-        elif kind != "dp":
+        elif kind != castep_identifiers.DP:
             error_log.add_msg("Error", node, f"Float literal with {kind=}")
 
     elif "d" in literal_string:
         pass  # eg 5.0d4
     elif not is_int(literal_string):
         error_log.add_msg("Error", node, "Float literal without kind")
+
+
+def is_int(x: str) -> bool:
+    return not any(c in x.lower() for c in [".", "e", "d"])
