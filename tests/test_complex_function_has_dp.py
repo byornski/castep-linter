@@ -8,7 +8,7 @@ from castep_linter.scan_files import run_tests_on_code
 
 @pytest.fixture
 def test_list():
-    return {"call_expression": [tests.test_complex_has_dp]}
+    return {"call_expression": [tests.check_complex_has_dp]}
 
 
 @pytest.fixture

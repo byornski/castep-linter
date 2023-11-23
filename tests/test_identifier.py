@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0116,C0114
+import pytest
 from castep_linter.fortran.identifier import Identifier
 
 
@@ -28,3 +29,26 @@ def test_string_not_equals():
     assert Identifier("X") != "y"
     assert Identifier("x") != "Y"
     assert Identifier("X") != "Y"
+
+def test_identifier_hash_eq():
+    assert hash(Identifier("x")) == hash(Identifier("x"))
+    assert hash(Identifier("X")) == hash(Identifier("x"))
+    assert hash(Identifier("x")) == hash(Identifier("X"))
+    assert hash(Identifier("X")) == hash(Identifier("X"))
+
+def test_identifier_hash_not_equals():
+    assert hash(Identifier("x")) != hash(Identifier("y"))
+    assert hash(Identifier("X")) != hash(Identifier("y"))
+    assert hash(Identifier("x")) != hash(Identifier("Y"))
+    assert hash(Identifier("X")) != hash(Identifier("Y"))
+
+
+def test_identifier_compare_none():
+    assert Identifier("x") != None
+    assert Identifier("X") != None
+    assert None != Identifier("x") 
+    assert None != Identifier("X")
+
+def test_identifier_compare_object():
+    with pytest.raises(TypeError):
+        assert Identifier("x") != object()

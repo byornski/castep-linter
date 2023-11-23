@@ -7,7 +7,7 @@ from castep_linter.fortran.identifier import Identifier
 from castep_linter.tests import castep_identifiers
 
 
-def test_real_dp_declaration(node: FortranNode, error_log: ErrorLogger) -> None:
+def check_real_dp_declaration(node: FortranNode, error_log: ErrorLogger) -> None:
     """Test that all real values are specified by real(kind=dp)"""
 
     if not node.is_type(Fortran.VARIABLE_DECLARATION):

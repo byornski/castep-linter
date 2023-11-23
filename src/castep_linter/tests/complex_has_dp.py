@@ -5,7 +5,7 @@ from castep_linter.fortran.fortran_node import Fortran, FortranNode, WrongNodeEr
 from castep_linter.tests import castep_identifiers
 
 
-def test_complex_has_dp(node: FortranNode, error_log: ErrorLogger) -> None:
+def check_complex_has_dp(node: FortranNode, error_log: ErrorLogger) -> None:
     """Test that a call of complex(x) has a dp"""
 
     if not node.is_type(Fortran.CALL_EXPRESSION):

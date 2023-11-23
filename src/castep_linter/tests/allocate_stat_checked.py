@@ -6,7 +6,7 @@ from castep_linter.fortran.identifier import Identifier
 from castep_linter.tests import castep_identifiers
 
 
-def test_allocate_has_stat(node: FortranNode, error_log: ErrorLogger) -> None:
+def check_allocate_has_stat(node: FortranNode, error_log: ErrorLogger) -> None:
     """Test that allocate stat is used and checked"""
 
     if not node.is_type(Fortran.CALL_EXPRESSION):
