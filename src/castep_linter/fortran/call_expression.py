@@ -1,4 +1,5 @@
 """Module holding the CallExpression type"""
+import logging
 from typing import ClassVar, List, Optional, Tuple
 
 from castep_linter.fortran.argument_parser import ArgParser, ArgType
@@ -15,7 +16,7 @@ class CallExpression(FortranStatementParser):
     def __init__(self, call_expression_node: FortranNode) -> None:
         super().__init__(call_expression_node)
 
-        self.name = self._get_name(call_expression_node)
+        self.name = _get_name(call_expression_node)
 
         try:
             arg_list = call_expression_node.get(Fortran.ARGUMENT_LIST)
@@ -30,11 +31,14 @@ class CallExpression(FortranStatementParser):
         """Get an argument from the call expression"""
         return self.args.get(keyword, position)
 
-    def _get_name(self, node: FortranNode):
-        try:
-            return Identifier.from_node(node.get(Fortran.IDENTIFIER))
-        except LookupError:
-            return None
 
     def __str__(self):
         return f"{self.name=} {self.args=}"
+
+
+def _get_name(node: FortranNode) -> Identifier:
+    try:
+        return Identifier.from_node(node.get(Fortran.IDENTIFIER))
+    except KeyError:
+        return Identifier("")
+
