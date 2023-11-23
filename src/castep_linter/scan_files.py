@@ -1,8 +1,8 @@
 """Static code analysis tool for castep"""
 import argparse
+import logging
 import pathlib
 import sys
-import logging
 
 from rich.console import Console
 from tree_sitter import Parser
@@ -86,7 +86,6 @@ def main() -> None:
         except UnicodeDecodeError:
             logging.error("Failed to properly decode %s", file)
             raise
-
 
         if not args.quiet:
             error_log.print_errors(console, level=args.level)

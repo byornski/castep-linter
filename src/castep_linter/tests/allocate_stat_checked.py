@@ -1,6 +1,4 @@
 """Test that allocate stat is used and checked"""
-import logging
-
 from castep_linter.error_logging import ErrorLogger
 from castep_linter.fortran import CallExpression
 from castep_linter.fortran.fortran_node import Fortran, FortranNode, WrongNodeError
