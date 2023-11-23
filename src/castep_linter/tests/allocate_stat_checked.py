@@ -1,4 +1,6 @@
 """Test that allocate stat is used and checked"""
+import logging
+
 from castep_linter.error_logging import ErrorLogger
 from castep_linter.fortran import CallExpression
 from castep_linter.fortran.fortran_node import Fortran, FortranNode, WrongNodeError
@@ -14,6 +16,9 @@ def test_allocate_has_stat(node: FortranNode, error_log: ErrorLogger) -> None:
         raise WrongNodeError(err)
 
     routine = CallExpression(node)
+
+    if routine.name is None:
+        return
 
     # Check this is actually an allocate statement
     if routine.name != castep_identifiers.ALLOCATE:
@@ -40,7 +45,7 @@ def test_allocate_has_stat(node: FortranNode, error_log: ErrorLogger) -> None:
             relational_expr = next_node.get(Fortran.PAREN_EXPRESSION).get(Fortran.RELATIONAL_EXPR)
         except KeyError:
             error_log.add_msg("Error", stat_variable_node, "Allocate status not checked")
-            raise
+            return
 
         lhs, rhs = relational_expr.split()
 

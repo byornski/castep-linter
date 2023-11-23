@@ -21,5 +21,5 @@ def test_complex_has_dp(node: FortranNode, error_log: ErrorLogger) -> None:
             error_log.add_msg("Error", node, "No kind specifier in complex intrinsic")
             return
 
-        if arg_value.raw.lower() != castep_identifiers.DP:
+        if arg_value.raw.lower() not in castep_identifiers.DP_ALL:
             error_log.add_msg("Error", node, "Invalid kind specifier in complex intrinsic")

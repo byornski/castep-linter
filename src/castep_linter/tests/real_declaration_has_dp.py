@@ -30,7 +30,7 @@ def test_real_dp_declaration(node: FortranNode, error_log: ErrorLogger) -> None:
 
     elif (
         arg_value.ftype == Fortran.IDENTIFIER
-        and Identifier.from_node(arg_value) != castep_identifiers.DP
+        and Identifier.from_node(arg_value) not in castep_identifiers.DP_ALL
     ):
         error_log.add_msg("Warning", arg_value, "Invalid kind specifier")
 
