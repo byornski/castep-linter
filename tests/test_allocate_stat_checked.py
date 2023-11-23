@@ -85,3 +85,13 @@ def test_allocate_stat_not_checked(parser, test_list):
     wrapped_code = subroutine_wrapper(code)
     error_log = run_tests_on_code(parser, wrapped_code, test_list, "filename")
     assert len(error_log.errors) == 1
+
+
+def test_allocate_stat_not_checked_with_line_after(parser, test_list):
+    code = b"""
+    allocate(stat_checked_var(x,y,z), stat=u)
+    x = 5
+    """
+    wrapped_code = subroutine_wrapper(code)
+    error_log = run_tests_on_code(parser, wrapped_code, test_list, "filename")
+    assert len(error_log.errors) == 1

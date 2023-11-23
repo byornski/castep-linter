@@ -35,7 +35,7 @@ def test_trace_entry_exit_correct(parser, test_list):
     """
     wrapped_code = subroutine_wrapper(code)
     error_log = run_tests_on_code(parser, wrapped_code, test_list, "filename")
-    assert len(error_log.errors) == 0
+    assert len(error_log.errors) == 0, error_log.errors
 
 
 def test_trace_entry_exit_correct_extra(parser, test_list):
