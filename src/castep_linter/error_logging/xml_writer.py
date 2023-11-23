@@ -2,7 +2,7 @@
 from pathlib import Path
 from typing import Dict
 
-from junitparser import Error, JUnitXml, Skipped, TestCase, TestSuite
+from junitparser import Error, JUnitXml, Skipped, TestCase, TestSuite  # type: ignore
 
 from castep_linter.error_logging.logger import ErrorLogger
 

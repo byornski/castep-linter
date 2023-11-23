@@ -1,8 +1,7 @@
 """"Module with base class for Fortran code parser classes"""
 from typing import ClassVar, List
 
-from tree_sitter import Node
-
+from castep_linter.fortran.fortran_node import FortranNode
 from castep_linter.fortran.type_checking import WrongNodeError, node_of_type
 
 
@@ -11,7 +10,7 @@ class FortranStatementParser:
 
     ALLOWED_NODES: ClassVar[List[str]] = []
 
-    def __init__(self, node: Node):
+    def __init__(self, node: FortranNode):
         if not node_of_type(node, self.ALLOWED_NODES):
             err = f"{node.type} not in {self.ALLOWED_NODES}"
             raise WrongNodeError(err)

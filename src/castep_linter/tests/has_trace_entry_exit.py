@@ -1,13 +1,14 @@
 """Test that a subroutine or function has a trace_entry and trace_exit with the correct name"""
-from tree_sitter import Node
-
 from castep_linter.error_logging import ErrorLogger
 from castep_linter.fortran import CallExpression, FType, VariableDeclaration, parser
+from castep_linter.fortran.fortran_node import FortranNode, WrongNodeError
 
 
-@parser.node_type_check("subroutine", "function")
-def test_trace_entry_exit(node: Node, error_log: ErrorLogger) -> None:
+def test_trace_entry_exit(node: FortranNode, error_log: ErrorLogger) -> None:
     """Test that a subroutine or function has a trace_entry and trace_exit with the correct name"""
+    if node.type not in ["subroutine", "function"]:
+        err = "Wrong node type passed"
+        raise WrongNodeError(err)
 
     has_trace_entry = False
     has_trace_exit = False
@@ -65,7 +66,7 @@ def test_trace_entry_exit(node: Node, error_log: ErrorLogger) -> None:
                     error_log.add_msg("Error", trace_node, err)
 
             else:
-                err = f"Unrecognisable {statement.get_code()} {trace_node.type=} {statement}"
+                err = f"Unrecognisable {statement.raw()} {trace_node.type=} {statement}"
                 raise ValueError(err)
 
     if not has_trace_entry:

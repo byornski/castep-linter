@@ -1,12 +1,11 @@
 """Test that a number literal has a dp (if real) or no dp if of any other type"""
-from tree_sitter import Node
-
 from castep_linter.error_logging import ErrorLogger
 from castep_linter.fortran import parser
+from castep_linter.fortran.fortran_node import FortranNode
 
 
 @parser.node_type_check("number_literal")
-def test_number_literal(node: Node, error_log: ErrorLogger) -> None:
+def test_number_literal(node: FortranNode, error_log: ErrorLogger) -> None:
     """Test that a number literal has a dp (if real) or no dp if of any other type"""
 
     def is_int(x: str) -> bool:

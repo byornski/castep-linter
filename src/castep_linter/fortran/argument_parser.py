@@ -2,8 +2,7 @@
 from enum import Enum, auto
 from typing import ClassVar, List, Optional
 
-from tree_sitter import Node
-
+from castep_linter.fortran.fortran_node import FortranNode
 from castep_linter.fortran.parser import parse_arg_list
 
 
@@ -21,7 +20,7 @@ class ArgParser:
     ALLOWED_NODES: ClassVar[List[str]] = ["argument_list"]
     ArgType = ArgType
 
-    def __init__(self, arg_list: Optional[Node] = None):
+    def __init__(self, arg_list: Optional[FortranNode] = None):
         if arg_list:
             self.args, self.kwargs = parse_arg_list(arg_list)
         else:

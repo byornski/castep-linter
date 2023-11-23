@@ -1,12 +1,11 @@
 """Test that a call of complex(x) has a dp"""
-from tree_sitter import Node
-
 from castep_linter.error_logging import ErrorLogger
 from castep_linter.fortran import CallExpression, parser
+from castep_linter.fortran.fortran_node import FortranNode
 
 
 @parser.node_type_check("call_expression")
-def test_complex_has_dp(node: Node, error_log: ErrorLogger) -> None:
+def test_complex_has_dp(node: FortranNode, error_log: ErrorLogger) -> None:
     """Test that a call of complex(x) has a dp"""
 
     call_expr = CallExpression(node)

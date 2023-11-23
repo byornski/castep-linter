@@ -1,12 +1,12 @@
 """Test that all real values are specified by real(kind=dp)"""
-from tree_sitter import Node
 
 from castep_linter.error_logging import ErrorLogger
 from castep_linter.fortran import ArgType, FType, VariableDeclaration, parser
+from castep_linter.fortran.fortran_node import FortranNode
 
 
 @parser.node_type_check("variable_declaration")
-def test_real_dp_declaration(node: Node, error_log: ErrorLogger) -> None:
+def test_real_dp_declaration(node: FortranNode, error_log: ErrorLogger) -> None:
     """Test that all real values are specified by real(kind=dp)"""
 
     var_decl = VariableDeclaration(node)

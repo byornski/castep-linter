@@ -2,40 +2,14 @@
 import argparse
 import pathlib
 import sys
-from typing import Generator
 
 from rich.console import Console
-from tree_sitter import Node, Parser, Tree
+from tree_sitter import Parser
 
 from castep_linter import error_logging
 from castep_linter.error_logging.xml_writer import write_xml
 from castep_linter.fortran import parser
 from castep_linter.tests import test_list
-
-
-def traverse_tree(tree: Tree) -> Generator[Node, None, None]:
-    """Traverse a tree-sitter tree in a depth first search"""
-    cursor = tree.walk()
-
-    reached_root = False
-    while not reached_root:
-        yield cursor.node
-
-        if cursor.goto_first_child():
-            continue
-
-        if cursor.goto_next_sibling():
-            continue
-
-        retracing = True
-        while retracing:
-            if not cursor.goto_parent():
-                retracing = False
-                reached_root = True
-
-            if cursor.goto_next_sibling():
-                retracing = False
-
 
 # done - complex(var) vs complex(var,dp) or complex(var, kind=dp)
 # done - allocate without stat and stat not checked. deallocate?
@@ -50,10 +24,10 @@ def run_tests_on_code(fort_parser: Parser, code: bytes, test_dict: dict, filenam
     tree = fort_parser.parse(code)
     error_log = error_logging.ErrorLogger(filename)
 
-    for node in traverse_tree(tree):
+    for node in parser.traverse_tree(tree):
         # Have to check for is_named here as we want the statements,
         # not literal words like subroutine
-        if node.is_named and node.type in test_dict:
+        if node.type in test_dict:
             for test in test_dict[node.type]:
                 test(node, error_log)
 

@@ -4,9 +4,9 @@ from dataclasses import dataclass, field
 from typing import Iterator, List
 
 from rich.console import Console
-from tree_sitter import Node
 
 from castep_linter.error_logging import error_types
+from castep_linter.fortran.fortran_node import FortranNode
 
 
 @dataclass
@@ -20,7 +20,7 @@ class ErrorLogger:
     def __iter__(self) -> Iterator[error_types.FortranMsgBase]:
         return iter(self.errors)
 
-    def add_msg(self, level: str, node: Node, message: str):
+    def add_msg(self, level: str, node: FortranNode, message: str):
         """Add an error to the error list"""
         err = error_types.new_fortran_error(level, node, message)
         self.errors.append(err)

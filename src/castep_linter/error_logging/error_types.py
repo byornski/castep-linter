@@ -1,7 +1,7 @@
 """Module to handle errors, warnings and info messages"""
 from typing import ClassVar
 
-from tree_sitter import Node
+from castep_linter.fortran.fortran_node import FortranNode
 
 
 class FortranMsgBase:
@@ -12,10 +12,10 @@ class FortranMsgBase:
     LINE_NUMBER_OFFSET = 8
     ERROR_SEVERITY: ClassVar[int] = 100
 
-    def __init__(self, node: Node, message: str) -> None:
+    def __init__(self, node: FortranNode, message: str) -> None:
         self.message = message
-        self.start_point = node.start_point
-        self.end_point = node.end_point
+        self.start_point = node.node.start_point  # TODO FIX
+        self.end_point = node.node.end_point
 
     def print_err(self, filename: str, console) -> None:
         """Print the error to the supplied console"""
@@ -77,7 +77,7 @@ class FortranInfo(FortranMsgBase):
     ERROR_SEVERITY: ClassVar[int] = 0
 
 
-def new_fortran_error(level: str, node: Node, message: str) -> FortranMsgBase:
+def new_fortran_error(level: str, node: FortranNode, message: str) -> FortranMsgBase:
     """Generate a new fortran diagnostic message"""
     cls = FortranMsgBase
     if level == "Error":
