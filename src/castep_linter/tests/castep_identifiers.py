@@ -13,8 +13,9 @@ CMPLX = Identifier("cmplx")
 # Parameters
 DP = Identifier("dp")
 DPREC = Identifier("dprec")
+DI_DP = Identifier("di_dp")
 
-DP_ALL = {DP, DPREC}
+DP_ALL = {DP, DPREC, DI_DP}
 
 # Special keywords
 STAT = Identifier("stat")
