@@ -1,4 +1,4 @@
-# pylint: disable=W0621,C0116,C0114
+# pylint: disable=W0621,C0116,C0114,C0121
 import pytest
 
 from castep_linter.fortran.identifier import Identifier
@@ -47,10 +47,10 @@ def test_identifier_hash_not_equals():
 
 
 def test_identifier_compare_none():
-    assert Identifier("x") != 3
-    assert Identifier("X") != 4
-    assert 5 != Identifier("x")
-    assert 6 != Identifier("X")
+    assert Identifier("x") != None  # noqa: E711
+    assert Identifier("X") != None  # noqa: E711
+    assert None != Identifier("x")  # noqa: E711
+    assert None != Identifier("X")  # noqa: E711
 
 
 def test_identifier_compare_object():
