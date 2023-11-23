@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0116,C0114
 from unittest import mock
+
 import pytest
 
 from castep_linter import tests
@@ -18,11 +19,13 @@ def test_list():
 def parser():
     return get_fortran_parser()
 
+
 def test_wrong_node():
     mock_node = mock.Mock(**{"is_type.return_value": False})
     err_log = mock.MagicMock()
     with pytest.raises(WrongNodeError):
         check_real_dp_declaration(mock_node, err_log)
+
 
 def test_real_dp_correct(parser, test_list):
     code = b"real(kind=dp) :: y"
@@ -41,6 +44,7 @@ def test_real_dp_by_position(parser, test_list):
     code = b"real(dp) :: y"
     error_log = run_tests_on_code(parser, code, test_list, "filename")
     assert len(error_log.errors) == 1
+
 
 def test_real_dp_by_d0(parser, test_list):
     code = b"DOUBLE PRECISION :: y"

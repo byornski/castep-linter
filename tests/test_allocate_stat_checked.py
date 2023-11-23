@@ -1,12 +1,12 @@
 # pylint: disable=W0621,C0116,C0114
+from unittest import mock
+
 import pytest
 
 from castep_linter import tests
-from castep_linter.fortran.fortran_node import Fortran, WrongNodeError
+from castep_linter.fortran.fortran_node import WrongNodeError
 from castep_linter.fortran.parser import get_fortran_parser
 from castep_linter.scan_files import run_tests_on_code
-from unittest import mock
-
 from castep_linter.tests.allocate_stat_checked import check_allocate_has_stat
 
 

@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0116,C0114
 from unittest import mock
+
 import pytest
 
 from castep_linter import tests
