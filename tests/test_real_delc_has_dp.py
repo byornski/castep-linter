@@ -33,6 +33,12 @@ def test_real_dp_correct(parser, test_list):
     assert len(error_log.errors) == 0
 
 
+def test_real_version_kind_correct(parser, test_list):
+    code = b"real(kind=version_kind) :: y"
+    error_log = run_tests_on_code(parser, code, test_list, "filename")
+    assert len(error_log.errors) == 0
+
+
 @pytest.mark.skip(reason="Not current implemented")
 def test_real_dp_correctb(parser, test_list):
     code = b"real, kind(dp) :: y"

@@ -22,6 +22,12 @@ def test_real_literal_with_dp(parser, test_list):
     assert len(error_log.errors) == 0
 
 
+def test_real_literal_with_version_kind(parser, test_list):
+    code = b"z = 1.0_version_kind"
+    error_log = run_tests_on_code(parser, code, test_list, "filename")
+    assert len(error_log.errors) == 0
+
+
 def test_real_literal_with_other_kind(parser, test_list):
     code = b"z = 1.0_sp"
     error_log = run_tests_on_code(parser, code, test_list, "filename")

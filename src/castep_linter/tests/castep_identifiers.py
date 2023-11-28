@@ -14,8 +14,9 @@ CMPLX = Identifier("cmplx")
 DP = Identifier("dp")
 DPREC = Identifier("dprec")
 DI_DP = Identifier("di_dp")
+VERSION_KIND = Identifier("version_kind")
 
-DP_ALL = {DP, DPREC, DI_DP}
+DP_ALL = {DP, DPREC, DI_DP, VERSION_KIND}
 
 # Special keywords
 STAT = Identifier("stat")
