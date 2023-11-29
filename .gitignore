@@ -1,3 +1,4 @@
+*.f90
 .coverage
 __pycache__
 fortran.so

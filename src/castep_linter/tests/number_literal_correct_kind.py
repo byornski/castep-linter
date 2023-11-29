@@ -4,7 +4,7 @@ from castep_linter.fortran.fortran_node import Fortran, FortranNode, WrongNodeEr
 from castep_linter.tests import castep_identifiers
 
 
-def test_number_literal(node: FortranNode, error_log: ErrorLogger) -> None:
+def check_number_literal(node: FortranNode, error_log: ErrorLogger) -> None:
     """Test that a number literal has a dp (if real) or no dp if of any other type"""
 
     if not node.is_type(Fortran.NUMBER_LITERAL):

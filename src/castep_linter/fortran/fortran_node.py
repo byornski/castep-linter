@@ -1,6 +1,6 @@
 """Module containing useful classes for parsing a fortran source tree from tree-sitter"""
 from enum import Enum
-from typing import List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 from tree_sitter import Node
 
@@ -117,3 +117,13 @@ class FortranNode:
             err = f"Tried to parse {self.raw} as string literal"
             raise WrongNodeError(err)
         return self.raw.strip("\"'")
+
+    def print_tree(self, printfn: Callable, indent: int = 0):
+        """Prints a representation of the tree"""
+        if self.node.is_named:
+            printfn(" │ " * indent + " ├ " + self.node.type)
+        else:
+            printfn(" │ " * indent + " ├ " + "[blue]" + self.node.type + "[/blue]")
+
+        for c in self.children:
+            c.print_tree(printfn, indent + 1)

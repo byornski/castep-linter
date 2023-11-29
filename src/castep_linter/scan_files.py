@@ -5,12 +5,11 @@ import pathlib
 import sys
 
 from rich.console import Console
-from tree_sitter import Parser
 
 from castep_linter import error_logging
 from castep_linter.error_logging.xml_writer import write_xml
 from castep_linter.fortran import parser
-from castep_linter.tests import test_list
+from castep_linter.tests import CheckFunction, test_list
 
 # done - complex(var) vs complex(var,dp) or complex(var, kind=dp)
 # done - allocate without stat and stat not checked. deallocate?
@@ -21,13 +20,12 @@ from castep_linter.tests import test_list
 
 
 def run_tests_on_code(
-    fort_parser: Parser, code: bytes, test_dict: dict, filename: str
+    fort_tree: parser.FortranTree, test_dict: dict[str, list[CheckFunction]], filename: str
 ) -> error_logging.ErrorLogger:
     """Run all available tests on the supplied source code"""
-    tree = fort_parser.parse(code)
     error_log = error_logging.ErrorLogger(filename)
 
-    for node in parser.traverse_tree(tree):
+    for node in fort_tree.walk():
         # Have to check for is_named here as we want the statements,
         # not literal words like subroutine
         if node.type in test_dict:
@@ -61,6 +59,9 @@ def parse_args():
     )
     arg_parser.add_argument("-q", "--quiet", action="store_true", help="Do not write to console")
     arg_parser.add_argument("-d", "--debug", action="store_true", help="Turn on debug output")
+    arg_parser.add_argument(
+        "-p", "--print-tree", action="store_true", help="Print the parsed source tree"
+    )
     arg_parser.add_argument("file", nargs="+", type=path, help="Files to scan")
     return arg_parser.parse_args()
 
@@ -69,7 +70,6 @@ def main() -> None:
     """Main entry point for the CASTEP linter"""
     args = parse_args()
 
-    fortran_parser = parser.get_fortran_parser()
     console = Console(soft_wrap=True)
 
     if args.debug:
@@ -78,15 +78,21 @@ def main() -> None:
     error_logs = {}
 
     for file in args.file:
-        with file.open("rb") as fd:
-            raw_text = fd.read()
+        # Parse the source file
+        fortan_tree = parser.FortranTree.from_file(file)
 
+        # Print for development
+        if args.print_tree:
+            fortan_tree.display(console.print)
+
+        # Actually run the tests
         try:
-            error_log = run_tests_on_code(fortran_parser, raw_text, test_list, str(file))
+            error_log = run_tests_on_code(fortan_tree, test_list, str(file))
         except UnicodeDecodeError:
             logging.error("Failed to properly decode %s", file)
             raise
 
+        # Report any errors
         if not args.quiet:
             error_log.print_errors(console, level=args.level)
 
@@ -99,9 +105,11 @@ def main() -> None:
 
         error_logs[str(file)] = error_log
 
+    # Write junit xml file
     if args.xml:
         write_xml(args.xml, error_logs, error_logging.ERROR_SEVERITY[args.level])
 
+    # Exit with an error code if there were any errors
     if any(e.has_errors for e in error_logs.values()):
         sys.exit(1)
     else:

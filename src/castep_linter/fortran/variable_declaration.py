@@ -83,3 +83,7 @@ class VariableDeclaration(FortranStatementParser):
     ) -> Tuple[ArgType, FortranNode]:
         """Get an argument from the call expression"""
         return self.args.get(keyword, position)
+
+    def get_initialized_vars(self) -> dict[Identifier, str]:
+        """Get variables that have an initial value"""
+        return {k: v for k, v in self.vars.items() if v}
