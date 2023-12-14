@@ -2,7 +2,7 @@
 from typing import Callable
 
 from castep_linter.error_logging.logger import ErrorLogger
-from castep_linter.fortran.fortran_node import FortranNode
+from castep_linter.fortran.fortran_nodes import FortranNode
 from castep_linter.tests.allocate_stat_checked import check_allocate_has_stat
 from castep_linter.tests.complex_has_dp import check_complex_has_dp
 from castep_linter.tests.has_trace_entry_exit import check_trace_entry_exit

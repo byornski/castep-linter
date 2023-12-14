@@ -1,18 +1,21 @@
 """Test that a subroutine or function has a trace_entry and trace_exit with the correct name"""
 from castep_linter.error_logging import ErrorLogger
-from castep_linter.fortran import CallExpression, FType, VariableDeclaration
-from castep_linter.fortran.fortran_node import Fortran, FortranNode, WrongNodeError
+from castep_linter.fortran.fortran_nodes import (
+    FortranCallExpression,
+    FortranNode,
+    FortranVariableDeclaration,
+)
+from castep_linter.fortran.fortran_raw_types import Fortran, FType
 from castep_linter.fortran.identifier import Identifier
+from castep_linter.fortran.node_type_err import WrongNodeError
 from castep_linter.tests import castep_identifiers
 
 
 def check_trace_entry_exit(node: FortranNode, error_log: ErrorLogger) -> None:
     """Test that a subroutine or function has a trace_entry and trace_exit with the correct name"""
 
-    if node.is_type(Fortran.SUBROUTINE):
-        subroutine_name = Identifier.from_node(node.get(Fortran.SUBROUTINE_STMT).get(Fortran.NAME))
-    elif node.is_type(Fortran.FUNCTION):
-        subroutine_name = Identifier.from_node(node.get(Fortran.FUNCTION_STMT).get(Fortran.NAME))
+    if node.is_type(Fortran.SUBROUTINE) or node.is_type(Fortran.FUNCTION):
+        subroutine_name = node.get_context_identifier()
     else:
         err = "Wrong node type passed"
         raise WrongNodeError(err)
@@ -23,15 +26,21 @@ def check_trace_entry_exit(node: FortranNode, error_log: ErrorLogger) -> None:
     const_string_vars: dict[Identifier, str] = {}
 
     for var_node in node.get_children_by_name(Fortran.VARIABLE_DECLARATION):
-        var_decl = VariableDeclaration(var_node)
+        if not isinstance(var_node, FortranVariableDeclaration):
+            err = f"Expected variable declaration but got {node.type}"
+            raise WrongNodeError(err)
 
-        if var_decl.type != FType.CHARACTER:
+        var_decl = var_node
+
+        if var_decl.var_type != FType.CHARACTER:
             continue
 
         const_string_vars.update(var_decl.get_initialized_vars())
 
-    for statement in node.get_children_by_name(Fortran.SUBROUTINE_CALL):
-        routine = CallExpression(statement)
+    for routine in node.get_children_by_name(Fortran.SUBROUTINE_CALL):
+        if not isinstance(routine, FortranCallExpression):
+            err = f"Expected subroutine call but got {node.type}"
+            raise WrongNodeError(err)
 
         if routine.name == castep_identifiers.TRACE_ENTRY:
             has_trace_entry = True
@@ -42,10 +51,10 @@ def check_trace_entry_exit(node: FortranNode, error_log: ErrorLogger) -> None:
             continue
 
         try:
-            _, trace_node = routine.get_arg(position=1, keyword=castep_identifiers.TRACE_STRING)
+            trace_node = routine.get_arg(position=1, keyword=castep_identifiers.TRACE_STRING).value
         except KeyError:
             err = f"Unparsable name passed to trace in {subroutine_name}"
-            error_log.add_msg("Error", statement, err)
+            error_log.add_msg("Error", routine, err)
             continue
 
         if trace_node.is_type(Fortran.STRING_LITERAL):
@@ -71,7 +80,7 @@ def check_trace_entry_exit(node: FortranNode, error_log: ErrorLogger) -> None:
                 error_log.add_msg("Error", trace_node, err)
 
         else:
-            err = f"Unrecognisable {statement.raw} {trace_node.type=} {statement}"
+            err = f"Unrecognisable {routine.raw} {trace_node.type=} {routine}"
             raise ValueError(err)
 
     if not has_trace_entry:

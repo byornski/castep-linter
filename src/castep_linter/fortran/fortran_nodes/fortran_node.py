@@ -1,43 +1,13 @@
 """Module containing useful classes for parsing a fortran source tree from tree-sitter"""
-from enum import Enum
 from typing import Callable, List, Optional, Tuple
 
+from rich.console import Console
 from tree_sitter import Node
 
-
-class WrongNodeError(Exception):
-    """Exception thrown when an invalid node is passed to a typed function"""
-
-
-class Fortran(Enum):
-    """Represents raw fortran source code tree elements"""
-
-    COMMENT = "comment"
-    SUBROUTINE = "subroutine"
-    SUBROUTINE_STMT = "subroutine_statement"
-    FUNCTION = "function"
-    FUNCTION_STMT = "function_statement"
-    NAME = "name"
-    SIZE = "size"
-    INTRINSIC_TYPE = "intrinsic_type"
-    ASSIGNMENT_STMT = "assignment_statement"
-    ARGUMENT_LIST = "argument_list"
-    SUBROUTINE_CALL = "subroutine_call"
-    IDENTIFIER = "identifier"
-    VARIABLE_DECLARATION = "variable_declaration"
-    RELATIONAL_EXPR = "relational_expression"
-    IF_STMT = "if_statement"
-    PAREN_EXPRESSION = "parenthesized_expression"
-    KEYWORD_ARGUMENT = "keyword_argument"
-    STRING_LITERAL = "string_literal"
-    NUMBER_LITERAL = "number_literal"
-    TYPE_QUALIFIER = "type_qualifier"
-    CALL_EXPRESSION = "call_expression"
-
-    UNKNOWN = "unknown"
-
-
-FortranLookup = {k.value: k for k in Fortran}
+from castep_linter.fortran import node_factory
+from castep_linter.fortran.fortran_raw_types import Fortran, FortranLookup
+from castep_linter.fortran.identifier import Identifier
+from castep_linter.fortran.node_type_err import FortranContextError, WrongNodeError
 
 
 class FortranNode:
@@ -68,12 +38,12 @@ class FortranNode:
     @property
     def children(self) -> List["FortranNode"]:
         """Return all children of this node"""
-        return [FortranNode(c) for c in self.node.children]
+        return [node_factory.wrap_node(c) for c in self.node.children]
 
     def next_named_sibling(self) -> Optional["FortranNode"]:
         """Return the next named sibling of the current node"""
         if self.node.next_named_sibling:
-            return FortranNode(self.node.next_named_sibling)
+            return node_factory.wrap_node(self.node.next_named_sibling)
         else:
             return None
 
@@ -81,14 +51,16 @@ class FortranNode:
         """Return the first child node with the requested type"""
         for c in self.node.named_children:
             if c.type == ftype.value:
-                return FortranNode(c)
+                return node_factory.wrap_node(c)
 
         err = f'"{ftype}" not found in children of node {self.raw}'
         raise KeyError(err)
 
     def get_children_by_name(self, ftype: Fortran) -> List["FortranNode"]:
         """Return all the children with the requested type"""
-        return [FortranNode(c) for c in self.node.named_children if c.type == ftype.value]
+        return [
+            node_factory.wrap_node(c) for c in self.node.named_children if c.type == ftype.value
+        ]
 
     def split(self) -> Tuple["FortranNode", "FortranNode"]:
         """Split a relational node with a left and right part into the two child nodes"""
@@ -104,7 +76,7 @@ class FortranNode:
             err = f"Unable to find right part of node pair: {self.raw}"
             raise KeyError(err)
 
-        return FortranNode(left), FortranNode(right)
+        return node_factory.wrap_node(left), node_factory.wrap_node(right)
 
     @property
     def raw(self) -> str:
@@ -118,8 +90,11 @@ class FortranNode:
             raise WrongNodeError(err)
         return self.raw.strip("\"'")
 
-    def print_tree(self, printfn: Callable, indent: int = 0):
+    def print_tree(self, printfn: Optional[Callable] = None, indent: int = 0):
         """Prints a representation of the tree"""
+        if not printfn:
+            printfn = Console().print
+
         if self.node.is_named:
             printfn(" │ " * indent + " ├ " + self.node.type)
         else:
@@ -127,3 +102,12 @@ class FortranNode:
 
         for c in self.children:
             c.print_tree(printfn, indent + 1)
+
+    def get_context_identifier(self) -> Identifier:
+        """Get the name of the containing context of this node"""
+        if not self.node.parent:
+            err = "Node has no parent!"
+            raise FortranContextError(err)
+
+        p = node_factory.wrap_node(self.node.parent)
+        return p.get_context_identifier()

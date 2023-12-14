@@ -5,7 +5,8 @@ from typing import Callable, Generator, Optional
 
 from tree_sitter import Language, Parser
 
-from castep_linter.fortran.fortran_node import FortranNode
+from castep_linter.fortran import node_factory
+from castep_linter.fortran.fortran_nodes import FortranNode
 
 
 def get_fortran_parser():
@@ -32,6 +33,7 @@ class FortranTree:
 
     @staticmethod
     def from_file(file: pathlib.Path):
+        """Read from a file and return a AST"""
         with file.open("rb") as fd:
             raw_text = fd.read()
         return FortranTree(raw_text)
@@ -42,7 +44,7 @@ class FortranTree:
 
         reached_root = False
         while not reached_root:
-            yield FortranNode(cursor.node)
+            yield node_factory.wrap_node(cursor.node)
 
             if cursor.goto_first_child():
                 continue
@@ -61,4 +63,4 @@ class FortranTree:
 
     def display(self, printfn: Callable):
         """Print the tree for the source file"""
-        FortranNode(self.tree.root_node).print_tree(printfn)
+        node_factory.wrap_node(self.tree.root_node).print_tree(printfn)

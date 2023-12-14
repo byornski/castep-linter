@@ -1,7 +1,7 @@
 """Module to handle errors, warnings and info messages"""
 from typing import ClassVar
 
-from castep_linter.fortran.fortran_node import FortranNode
+from castep_linter.fortran.fortran_nodes import FortranNode
 
 
 class FortranMsgBase:

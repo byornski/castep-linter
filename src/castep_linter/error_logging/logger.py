@@ -6,7 +6,7 @@ from typing import Iterator, List
 from rich.console import Console
 
 from castep_linter.error_logging import error_types
-from castep_linter.fortran.fortran_node import FortranNode
+from castep_linter.fortran.fortran_nodes import FortranNode
 
 
 @dataclass

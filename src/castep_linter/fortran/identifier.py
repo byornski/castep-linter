@@ -1,5 +1,8 @@
 """Fortran identifier Class Module"""
-from castep_linter.fortran.fortran_node import FortranNode
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from castep_linter.fortran.fortran_nodes import FortranNode
 
 
 class Identifier:
@@ -8,8 +11,8 @@ class Identifier:
     def __init__(self, name: str):
         self.lower_name = name.lower()
 
-    @classmethod
-    def from_node(cls, node: FortranNode) -> "Identifier":
+    @staticmethod
+    def from_node(node: "FortranNode") -> "Identifier":
         """Create an identifier directly from a node"""
         return Identifier(node.raw)
 

@@ -3,7 +3,7 @@ from unittest import mock
 
 import pytest
 
-from castep_linter.fortran.fortran_node import WrongNodeError
+from castep_linter.fortran.node_type_err import WrongNodeError
 from castep_linter.scan_files import run_tests_on_code
 from castep_linter.tests import CheckFunctionDict, check_real_dp_declaration
 from tests.conftest import Parser
