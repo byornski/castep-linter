@@ -91,6 +91,9 @@ def main() -> None:
         except UnicodeDecodeError:
             logging.error("Failed to properly decode %s", file)
             raise
+        except Exception:
+            logging.error("Failed to properly parse %s", file)
+            raise
 
         # Report any errors
         if not args.quiet:
