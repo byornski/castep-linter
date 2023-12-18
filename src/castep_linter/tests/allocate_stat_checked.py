@@ -107,7 +107,7 @@ def check_allocate_has_stat(node: FortranNode, error_log: ErrorLogger) -> None:
         error_log.add_msg("Warning", node, "No stat on allocate statement")
         return
 
-    allocate_var_identifier = variable_name_from_allocate(routine)
+    # allocate_var_identifier = variable_name_from_allocate(routine)
 
     stat_variable = Identifier.from_node(stat_variable_node)
 
@@ -137,5 +137,5 @@ def check_allocate_has_stat(node: FortranNode, error_log: ErrorLogger) -> None:
         error_log.add_msg("Error", stat_variable_node, "Allocate status not checked")
         return
 
-    context_name = node.get_context_identifier()
-    check_allocate_error_names(next_node, error_log, allocate_var_identifier, context_name)
+    # context_name = node.get_context_identifier()
+    # check_allocate_error_names(next_node, error_log, allocate_var_identifier, context_name)

@@ -61,6 +61,6 @@ class FortranArgumentList(FortranNode):
                 continue
             else:
                 err = f"Unknown argument list item in keyword arguments: {child.type}: \n{child.raw}\nin\n{self.raw}"
-                raise ValueError(err)   
+                raise ValueError(err)
 
         return args, kwargs

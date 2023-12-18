@@ -47,3 +47,9 @@ class ErrorLogger:
     def has_errors(self):
         """Does the logger contain any errors"""
         return len(self) > 0
+
+    def has_errors_above(self, level: str):
+        """Does the logger contain any errors above the requested level"""
+        error_severity = error_types.ERROR_SEVERITY[level]
+        errors = (1 for e in self.errors if e.ERROR_SEVERITY >= error_severity)
+        return sum(errors) > 0  # type: ignore

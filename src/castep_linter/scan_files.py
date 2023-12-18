@@ -113,7 +113,7 @@ def main() -> None:
         write_xml(args.xml, error_logs, error_logging.ERROR_SEVERITY[args.level])
 
     # Exit with an error code if there were any errors
-    if any(e.has_errors for e in error_logs.values()):
+    if any(e.has_errors_above(args.level) for e in error_logs.values()):
         sys.exit(1)
     else:
         sys.exit(0)
