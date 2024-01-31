@@ -19,6 +19,7 @@ def write_json(file: Path, error_logs: Dict[str, ErrorLogger], error_level: int)
     report["issues"] = [{"fileName": scanned_file,
                          "severity": SEVERITY[error.ERROR_SEVERITY],
                          "message": error.message,
+                         "type": determine_type(error.message),
                          "lineStart": error.start_point[0]+1,  # Jenkins lines 1-indexed
                          "lineEnd": error.end_point[0]+1,
                          "columnStart": error.start_point[1]+1,
@@ -31,3 +32,23 @@ def write_json(file: Path, error_logs: Dict[str, ErrorLogger], error_level: int)
 
     with open(file, "w", encoding="utf-8") as out_file:
         json.dump(report, out_file, indent=2)
+
+
+def determine_type(message: str) -> str:
+    """ Determine type of error from key components """
+    if "alloc" in message.lower():
+        return "ALLOC"
+
+    if "complex intrinsic" in message:
+        return "CMPLX_KIND"
+
+    if "literal" in message:
+        return "LITERAL_KIND"
+
+    if "kind" in message:
+        return "KIND"
+
+    if "Missing trace_" in message or "Incorrect name" in message:
+        return "TRACE"
+
+    return "UNKNOWN"
