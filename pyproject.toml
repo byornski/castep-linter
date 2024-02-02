@@ -31,9 +31,9 @@ dependencies = [
 ]
 
 [project.urls]
-Documentation = "https://github.com/unknown/castep-linter#readme"
-Issues = "https://github.com/unknown/castep-linter/issues"
-Source = "https://github.com/unknown/castep-linter"
+Documentation = "https://github.com/byornski/castep-linter#readme"
+Issues = "https://github.com/byornski/castep-linter/issues"
+Source = "https://github.com/byornski/castep-linter"
 
 [project.scripts]
 castep-lint = "castep_linter.scan_files:main"
