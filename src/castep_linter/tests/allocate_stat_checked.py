@@ -1,4 +1,5 @@
 """Test that allocate stat is used and checked"""
+
 import logging
 
 from castep_linter.error_logging import ErrorLogger

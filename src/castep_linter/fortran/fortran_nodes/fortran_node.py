@@ -1,4 +1,5 @@
 """Module containing useful classes for parsing a fortran source tree from tree-sitter"""
+
 from typing import Callable, List, Optional, Tuple
 
 from rich.console import Console

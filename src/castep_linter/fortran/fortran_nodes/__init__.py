@@ -1,4 +1,5 @@
 """Module representing parsed fortran nodes"""
+
 from castep_linter.fortran.fortran_nodes.fortran_argument_list import FortranArgumentList
 from castep_linter.fortran.fortran_nodes.fortran_call_expression_node import FortranCallExpression
 from castep_linter.fortran.fortran_nodes.fortran_function_node import FortranFunctionNode

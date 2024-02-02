@@ -1,4 +1,5 @@
 """Test that a number literal has a dp (if real) or no dp if of any other type"""
+
 from castep_linter.error_logging import ErrorLogger
 from castep_linter.fortran.fortran_nodes import FortranNode
 from castep_linter.fortran.fortran_raw_types import Fortran

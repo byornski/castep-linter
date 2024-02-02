@@ -1,4 +1,5 @@
 """Module containing code for the high level error logger"""
+
 from collections import Counter
 from dataclasses import dataclass, field
 from typing import Iterator, List

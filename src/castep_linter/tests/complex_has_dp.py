@@ -1,4 +1,5 @@
 """Test that a call of complex(x) has a dp"""
+
 from castep_linter.error_logging import ErrorLogger
 from castep_linter.fortran.fortran_nodes import FortranCallExpression, FortranNode
 from castep_linter.fortran.node_type_err import WrongNodeError

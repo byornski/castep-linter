@@ -1,4 +1,5 @@
 """Test that a subroutine or function has a trace_entry and trace_exit with the correct name"""
+
 from castep_linter.error_logging import ErrorLogger
 from castep_linter.fortran.fortran_nodes import (
     FortranCallExpression,

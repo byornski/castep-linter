@@ -1,4 +1,5 @@
 """Tests for Fortran code in CASTEP"""
+
 import pathlib
 from importlib import resources as impresources
 from typing import Callable, Generator, Optional

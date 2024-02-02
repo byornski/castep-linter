@@ -1,4 +1,5 @@
 """Static code analysis tool for castep"""
+
 import argparse
 import logging
 import pathlib

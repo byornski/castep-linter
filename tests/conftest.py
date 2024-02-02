@@ -1,4 +1,5 @@
 """General fixtures for testing castep-linter"""
+
 from typing import Callable
 
 import pytest
