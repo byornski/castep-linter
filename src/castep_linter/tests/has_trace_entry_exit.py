@@ -85,6 +85,6 @@ def check_trace_entry_exit(node: FortranNode, error_log: ErrorLogger) -> None:
             raise ValueError(err)
 
     if not has_trace_entry:
-        error_log.add_msg("Warning", node, f"Missing trace_entry in {subroutine_name}")
+        error_log.add_msg("Info", node, f"Missing trace_entry in {subroutine_name}")
     if not has_trace_exit:
-        error_log.add_msg("Warning", node, f"Missing trace_exit in {subroutine_name}")
+        error_log.add_msg("Info", node, f"Missing trace_exit in {subroutine_name}")
