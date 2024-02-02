@@ -1,6 +1,6 @@
 """Module to handle errors, warnings and info messages"""
 
-from typing import ClassVar, Dict
+from typing import ClassVar, Dict, Literal
 
 from castep_linter.fortran.fortran_nodes import FortranNode
 
@@ -92,7 +92,9 @@ def new_fortran_error(level: str, node: FortranNode, message: str) -> FortranMsg
     return cls(node, message)
 
 
-FORTRAN_ERRORS: Dict[str, type[FortranMsgBase]] = {
+ErrorNames = Literal["Error", "Warn", "Info"]
+
+FORTRAN_ERRORS: Dict[ErrorNames, type[FortranMsgBase]] = {
     "Error": FortranError,
     "Warn": FortranWarning,
     "Info": FortranInfo,

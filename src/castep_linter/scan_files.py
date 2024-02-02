@@ -8,8 +8,8 @@ import sys
 from rich.console import Console
 
 from castep_linter import error_logging
-from castep_linter.error_logging.xml_writer import write_xml
 from castep_linter.error_logging.json_writer import write_json
+from castep_linter.error_logging.xml_writer import write_xml
 from castep_linter.fortran import parser
 from castep_linter.tests import CheckFunction, test_list
 
