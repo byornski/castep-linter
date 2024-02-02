@@ -1,4 +1,5 @@
 """Module to write code linting errors in JUnit XML format"""
+
 from pathlib import Path
 from typing import Dict
 
@@ -23,4 +24,4 @@ def write_xml(file: Path, error_logs: Dict[str, ErrorLogger], error_level: int):
 
         xml.add_testsuite(suite)
 
-    xml.write(file)
+    xml.write(str(file))
