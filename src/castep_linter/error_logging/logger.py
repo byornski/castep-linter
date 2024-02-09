@@ -26,13 +26,14 @@ class ErrorLogger:
         err = error_types.new_fortran_error(level, node, message)
         self.errors.append(err)
 
-    def print_errors(self, console: Console, level: str = "Warning") -> None:
+    def print_errors(self, console: Console, level: str = "Warning", *,
+                     print_style: error_types.PrintStyle = error_types.PrintStyle.ANNOTATED) -> None:
         """Print all the contained errors above the level"""
         severity = error_types.ERROR_SEVERITY[level]
 
         for err in self.errors:
             if err.ERROR_SEVERITY >= severity:
-                err.print_err(self.filename, console)
+                err.print_err(self.filename, console, print_style=print_style)
 
     def count_errors(self):
         """Count the number of errors in each category"""
