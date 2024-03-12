@@ -15,7 +15,7 @@ def get_fortran_parser():
 
     tree_sitter_src_ref = impresources.files("castep_linter") / "tree_sitter_fortran"
     with impresources.as_file(tree_sitter_src_ref) as tree_sitter_src:
-        fortran_language = Language(tree_sitter_src / "fortran.so", "fortran")
+        fortran_language = Language(str(tree_sitter_src / "fortran.so"), "fortran")
 
     parser = Parser()
     parser.set_language(fortran_language)

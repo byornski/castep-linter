@@ -8,6 +8,7 @@ from castep_linter.fortran.fortran_nodes import FortranNode
 
 class PrintStyle(Enum):
     """Error print styles"""
+
     ANNOTATED = auto()
     GCC = auto()
 
@@ -25,7 +26,9 @@ class FortranMsgBase:
         self.start_point = node.node.start_point  # TODO FIX
         self.end_point = node.node.end_point
 
-    def print_err(self, filename: str, console, *, print_style: PrintStyle = PrintStyle.ANNOTATED) -> None:
+    def print_err(
+        self, filename: str, console, *, print_style: PrintStyle = PrintStyle.ANNOTATED
+    ) -> None:
         """Print the error to the supplied console"""
 
         if print_style is PrintStyle.ANNOTATED:
@@ -38,7 +41,7 @@ class FortranMsgBase:
             console.print(context)
 
     def _gcc_format(self, filename):
-        """Format errors like the GCC """
+        """Format errors like the GCC"""
         start_line, _ = self.line_ranges
         start_char, _ = self.char_ranges
 

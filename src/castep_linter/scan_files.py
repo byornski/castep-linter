@@ -8,9 +8,9 @@ import sys
 from rich.console import Console
 
 from castep_linter import error_logging
+from castep_linter.error_logging.error_types import PrintStyle
 from castep_linter.error_logging.json_writer import write_json
 from castep_linter.error_logging.xml_writer import write_xml
-from castep_linter.error_logging.error_types import PrintStyle
 from castep_linter.fortran import parser
 from castep_linter.tests import CheckFunction, test_list
 
@@ -58,9 +58,12 @@ def parse_args():
         choices=error_logging.ERROR_SEVERITY.keys(),
     )
     arg_parser.add_argument(
-        "-f", "--format", type=lambda x: str(x).upper(),
-        choices=[x.name for x in PrintStyle], help="Format screen printing",
-        default="ANNOTATED"
+        "-f",
+        "--format",
+        type=lambda x: str(x).upper(),
+        choices=[x.name for x in PrintStyle],
+        help="Format screen printing",
+        default="ANNOTATED",
     )
     arg_parser.add_argument(
         "-x", "--xml", type=pathlib.Path, help="File for JUnit xml output if required"
