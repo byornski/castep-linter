@@ -77,7 +77,7 @@ def determine_type(message: str) -> str:
     if "literal" in message:
         return "LITERAL_KIND"
 
-    if "kind" in message:
+    if "kind" in message or "Kind" in message:
         return "KIND"
 
     if "Missing trace_" in message or "Incorrect name" in message:
