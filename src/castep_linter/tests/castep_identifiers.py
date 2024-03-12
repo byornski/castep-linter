@@ -18,6 +18,11 @@ VERSION_KIND = Identifier("version_kind")
 
 DP_ALL = {DP, DPREC, DI_DP, VERSION_KIND}
 
+# Integer kinds
+INT32 = Identifier("int32")
+INT64 = Identifier("int64")
+INT_KINDS = {INT32, INT64}
+
 # Special keywords
 STAT = Identifier("stat")
 KIND = Identifier("kind")

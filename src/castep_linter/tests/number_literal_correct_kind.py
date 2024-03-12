@@ -20,7 +20,8 @@ def check_number_literal(node: FortranNode, error_log: ErrorLogger) -> None:
         value, kind = literal_string.split("_", maxsplit=1)
 
         if is_int(value):
-            error_log.add_msg("Error", node, f"Integer literal with {kind=}")
+            if kind not in castep_identifiers.INT_KINDS:
+                error_log.add_msg("Error", node, f"Integer literal with {kind=}")
         elif kind not in castep_identifiers.DP_ALL:
             error_log.add_msg("Error", node, f"Float literal with {kind=}")
 
