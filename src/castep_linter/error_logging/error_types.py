@@ -1,8 +1,15 @@
 """Module to handle errors, warnings and info messages"""
 
+from enum import Enum, auto
 from typing import ClassVar, Dict, Literal
 
 from castep_linter.fortran.fortran_nodes import FortranNode
+
+
+class PrintStyle(Enum):
+    """Error print styles"""
+    ANNOTATED = auto()
+    GCC = auto()
 
 
 class FortranMsgBase:
@@ -18,26 +25,36 @@ class FortranMsgBase:
         self.start_point = node.node.start_point  # TODO FIX
         self.end_point = node.node.end_point
 
-    def print_err(self, filename: str, console) -> None:
+    def print_err(self, filename: str, console, *, print_style: PrintStyle = PrintStyle.ANNOTATED) -> None:
         """Print the error to the supplied console"""
-        console.print(self, style=self.ERROR_STYLE)
-        context = self.context(filename, underline=True)
+
+        if print_style is PrintStyle.ANNOTATED:
+            console.print(self, style=self.ERROR_STYLE)
+            context = self.context(filename, underline=True)
+        elif print_style is PrintStyle.GCC:
+            context = self._gcc_format(filename)
+
         if context:
             console.print(context)
+
+    def _gcc_format(self, filename):
+        """Format errors like the GCC """
+        start_line, _ = self.line_ranges
+        start_char, _ = self.char_ranges
+
+        return f"{filename}:{start_line+1}:{start_char}: {self.ERROR_TYPE}: {self.message}"
 
     def context(self, filename, *, underline=False):
         """Print a line of context for the current error"""
         context = ""
 
         with open(filename, "rb") as fd:
-            start_line, start_char = self.start_point
-            end_line, end_char = self.end_point
-            num_lines = end_line - start_line + 1
-            num_chars = end_char - start_char
+            start_line, _ = self.line_ranges
+            start_char, _ = self.char_ranges
 
             file_str = str(filename)
 
-            if num_lines == 1:
+            if self.num_lines == 1:
                 line = fd.read().splitlines()[start_line].decode(errors="replace")
                 context = f"{file_str}:{start_line+1:{self.LINE_NUMBER_OFFSET}}>{line}"
                 if underline:
@@ -46,9 +63,29 @@ class FortranMsgBase:
                         + " " * (len(file_str) + 1)
                         + " " * (self.LINE_NUMBER_OFFSET + 1)
                         + " " * start_char
-                        + "^" * num_chars
+                        + "^" * self.num_chars
                     )
         return context
+
+    @property
+    def line_ranges(self):
+        """Start and end line as a tuple"""
+        return self.start_point[0], self.end_point[0]
+
+    @property
+    def num_lines(self):
+        """Number of lines covering issue"""
+        return self.line_ranges[1] - self.line_ranges[0] + 1
+
+    @property
+    def char_ranges(self):
+        """Start and end chars as a tuple"""
+        return self.start_point[1], self.end_point[1]
+
+    @property
+    def num_chars(self):
+        """Number of characters covering issue"""
+        return self.char_ranges[1] - self.char_ranges[0]
 
     def __repr__(self):
         return f"{self.ERROR_TYPE}: {self.message}"
