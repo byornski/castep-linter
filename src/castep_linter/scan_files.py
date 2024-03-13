@@ -1,9 +1,11 @@
 """Static code analysis tool for castep"""
 
 import argparse
+import functools
 import logging
 import pathlib
 import sys
+from multiprocessing import Pool
 
 from rich.console import Console
 
@@ -20,6 +22,8 @@ from castep_linter.tests import CheckFunction, test_list
 # real with trailing . not .0 or .0_dp?
 # io_allocate_abort with wrong subname
 # tabs & DOS line endings, whitespace, comments?
+
+CONSOLE = Console(soft_wrap=True)
 
 
 def run_tests_on_code(
@@ -71,55 +75,64 @@ def parse_args():
     arg_parser.add_argument(
         "-j", "--json", type=pathlib.Path, help="File for Jenkins json output if required"
     )
+    arg_parser.add_argument(
+        "-p", "--parallel", type=int, default=1, help="How many threads to use for scanning"
+    )
     arg_parser.add_argument("-q", "--quiet", action="store_true", help="Do not write to console")
     arg_parser.add_argument("-d", "--debug", action="store_true", help="Turn on debug output")
     arg_parser.add_argument(
-        "-p", "--print-tree", action="store_true", help="Print the parsed source tree"
+        "--print-tree", action="store_true", help="Print the parsed source tree"
     )
     arg_parser.add_argument("file", nargs="+", type=path, help="Files to scan")
     return arg_parser.parse_args()
+
+
+def scan_file(file: pathlib.Path, args: argparse.Namespace) -> error_logging.ErrorLogger:
+    # Parse the source file
+    fortan_tree = parser.FortranTree.from_file(file)
+
+    # Print for development
+    if args.print_tree:
+        fortan_tree.display(CONSOLE.print)
+
+    # Actually run the tests
+    try:
+        error_log = run_tests_on_code(fortan_tree, test_list, str(file))
+    except UnicodeDecodeError:
+        logging.error("Failed to properly decode %s", file)
+        raise
+    except Exception:
+        logging.error("Failed to properly parse %s", file)
+        raise
+
+    return error_log
 
 
 def main() -> None:
     """Main entry point for the CASTEP linter"""
     args = parse_args()
 
-    console = Console(soft_wrap=True)
-
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
 
+    scanner = functools.partial(scan_file, args=args)
+
+    with Pool(args.parallel) as p:
+        error_list = p.map(scanner, args.file)
+
     error_logs = {}
 
-    for file in args.file:
-        # Parse the source file
-        fortan_tree = parser.FortranTree.from_file(file)
-
-        # Print for development
-        if args.print_tree:
-            fortan_tree.display(console.print)
-
-        # Actually run the tests
-        try:
-            error_log = run_tests_on_code(fortan_tree, test_list, str(file))
-        except UnicodeDecodeError:
-            logging.error("Failed to properly decode %s", file)
-            raise
-        except Exception:
-            logging.error("Failed to properly parse %s", file)
-            raise
-
+    for file, error_log in zip(args.file, error_list):
         # Report any errors
         if not args.quiet:
-            error_log.print_errors(console, level=args.level, print_style=PrintStyle[args.format])
+            error_log.print_errors(CONSOLE, level=args.level, print_style=PrintStyle[args.format])
 
             err_count = error_log.count_errors()
 
-            console.print(
+            CONSOLE.print(
                 f"{len(error_log.errors)} issues in {file} ({err_count['Error']} errors,"
                 f" {err_count['Warn']} warnings, {err_count['Info']} info)"
             )
-
         error_logs[str(file)] = error_log
 
     # Write junit xml file
