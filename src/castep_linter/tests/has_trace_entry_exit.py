@@ -12,6 +12,15 @@ from castep_linter.fortran.node_type_err import WrongNodeError
 from castep_linter.tests import castep_identifiers
 
 
+def correct_trace_name(trace_name: str, subroutine_name: Identifier):
+    """Checks whether a subroutine name given to trace is fine. Allows exceptions from the global list"""
+    trace_name = trace_name.lower()
+    if trace_name in castep_identifiers.TRACE_NAME_EXCEPTIONS:
+        return True
+    else:
+        return trace_name == subroutine_name
+
+
 def check_trace_entry_exit(node: FortranNode, error_log: ErrorLogger) -> None:
     """Test that a subroutine or function has a trace_entry and trace_exit with the correct name"""
 
@@ -60,7 +69,7 @@ def check_trace_entry_exit(node: FortranNode, error_log: ErrorLogger) -> None:
 
         if trace_node.is_type(Fortran.STRING_LITERAL):
             trace_string = trace_node.parse_string_literal().lower()
-            if trace_string != subroutine_name:
+            if not correct_trace_name(trace_string, subroutine_name):
                 err = f"Incorrect name passed to trace in {subroutine_name}"
                 error_log.add_msg("Error", trace_node, err)
 
@@ -70,7 +79,7 @@ def check_trace_entry_exit(node: FortranNode, error_log: ErrorLogger) -> None:
             if trace_sub_text in const_string_vars:
                 trace_string = const_string_vars[trace_sub_text]
 
-                if trace_string.lower() != subroutine_name:
+                if not correct_trace_name(trace_string, subroutine_name):
                     err = (
                         f"Incorrect name passed to trace in {subroutine_name} "
                         f'by variable {trace_sub_text}="{trace_string}"'

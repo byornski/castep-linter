@@ -7,6 +7,10 @@ TRACE_ENTRY = Identifier("trace_entry")
 TRACE_EXIT = Identifier("trace_exit")
 TRACE_STRING = Identifier("string")
 
+# Exceptions for trace subroutine names
+CASTEP_TRACE = Identifier("castep")
+TRACE_NAME_EXCEPTIONS = [CASTEP_TRACE]
+
 
 CMPLX = Identifier("cmplx")
 

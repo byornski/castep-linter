@@ -146,6 +146,33 @@ def test_trace_entry_exit_wrong_name_by_param(
     assert len(error_log.errors) == 2
 
 
+def test_trace_entry_exit_wrong_name_exception(
+    parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
+):
+    code = subroutine_wrapper(
+        b"""
+    call trace_entry("castep", stat)
+    call trace_exit("castep", stat)
+    """
+    )
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    assert len(error_log.errors) == 0
+
+
+def test_trace_entry_exit_wrong_name_by_param_exception(
+    parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
+):
+    code = subroutine_wrapper(
+        b"""
+    character(len=100), parameter :: sub_name = "castep"
+    call trace_entry(sub_name, stat)
+    call trace_exit(sub_name, stat)
+    """
+    )
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    assert len(error_log.errors) == 0
+
+
 def test_trace_entry_exit_no_name(
     parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
 ):
