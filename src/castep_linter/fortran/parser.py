@@ -1,25 +1,18 @@
 """Tests for Fortran code in CASTEP"""
 
 import pathlib
-from importlib import resources as impresources
 from typing import Callable, Generator, Optional
 
-from tree_sitter import Language, Parser
+from tree_sitter import Parser
+from tree_sitter_language_pack import get_parser
 
 from castep_linter.fortran import node_factory
 from castep_linter.fortran.fortran_nodes import FortranNode
 
 
-def get_fortran_parser():
-    """Get a tree-sitter-fortran parser from src"""
-
-    tree_sitter_src_ref = impresources.files("castep_linter") / "tree_sitter_fortran"
-    with impresources.as_file(tree_sitter_src_ref) as tree_sitter_src:
-        fortran_language = Language(str(tree_sitter_src / "fortran.so"), "fortran")
-
-    parser = Parser()
-    parser.set_language(fortran_language)
-    return parser
+def get_fortran_parser() -> Parser:
+    """Get a tree-sitter-fortran parser from fortran_language_pack"""
+    return get_parser("fortran")
 
 
 class FortranTree:
@@ -45,6 +38,10 @@ class FortranTree:
 
         reached_root = False
         while not reached_root:
+            if cursor.node is None:
+                err = "Reached end of tree unexpectedly"
+                raise EOFError(err)
+
             yield node_factory.wrap_node(cursor.node)
 
             if cursor.goto_first_child():

@@ -27,6 +27,7 @@ classifiers = [
 dependencies = [
   "rich",
   "tree_sitter",
+  "tree-sitter-language-pack",
   "junitparser",
 ]
 
@@ -40,10 +41,6 @@ castep-lint = "castep_linter.scan_files:main"
 
 [tool.hatch.version]
 path = "src/castep_linter/__about__.py"
-
-[tool.hatch.build.targets.wheel.hooks.autorun]
-dependencies = ["hatch-autorun"]
-file = "src/castep_linter/tree_sitter_fortran/gen.py"
 
 [tool.hatch.envs.default]
 dependencies = [
@@ -75,18 +72,19 @@ dependencies = [
   "ruff>=0.0.243",
   "rich",
   "tree_sitter",
+  "tree-sitter-language-pack",
   "junitparser",
   "pytest",
 ]
 [tool.hatch.envs.lint.scripts]
 typing = "mypy --install-types --non-interactive {args:src/castep_linter tests}"
 style = [
-  "ruff {args:.}",
+  "ruff check {args:.}",
   "black --check --diff {args:.}",
 ]
 fmt = [
   "black {args:.}",
-  "ruff --fix {args:.}",
+  "ruff check --fix {args:.}",
   "style",
 ]
 all = [

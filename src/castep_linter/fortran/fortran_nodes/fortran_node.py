@@ -82,6 +82,8 @@ class FortranNode:
     @property
     def raw(self) -> str:
         """Return a string of all the text in a node as unicode"""
+        if self.node.text is None:
+            return ""
         return self.node.text.decode()
 
     def parse_string_literal(self) -> str:
