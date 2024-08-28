@@ -11,7 +11,8 @@ from castep_linter.fortran.fortran_nodes.fortran_node import FortranNode
 from castep_linter.fortran.fortran_raw_types import Fortran
 from castep_linter.fortran.identifier import Identifier
 
-SKIP_ARGS_LIST = {"&",",",""}
+SKIP_ARGS_LIST = {"&", ",", ""}
+
 
 class FortranArgumentList(FortranNode):
     """Parser for fortran argument lists"""
@@ -46,7 +47,9 @@ class FortranArgumentList(FortranNode):
         parsing_arg_list = True
 
         for child in self.children[1:-1]:
-            if child.is_type(Fortran.COMMENT) or (child.is_type(Fortran.UNKNOWN) and child.raw in SKIP_ARGS_LIST):
+            if child.is_type(Fortran.COMMENT) or (
+                child.is_type(Fortran.UNKNOWN) and child.raw in SKIP_ARGS_LIST
+            ):
                 continue
 
             if child.is_type(Fortran.KEYWORD_ARGUMENT):

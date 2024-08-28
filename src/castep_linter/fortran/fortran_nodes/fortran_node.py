@@ -114,6 +114,6 @@ class FortranNode:
 
         p = node_factory.wrap_node(self.node.parent)
         return p.get_context_identifier()
-    
+
     def __repr__(self):
         return self.raw

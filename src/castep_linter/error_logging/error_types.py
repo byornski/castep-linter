@@ -58,7 +58,7 @@ class FortranMsgBase:
             file_str = str(filename)
 
             line = fd.read().splitlines()[start_line].decode(errors="replace")
-            
+
             # Fix the correct number of error characters on a multiline error
             if self.num_lines > 1:
                 num_chars = len(line) - start_char
