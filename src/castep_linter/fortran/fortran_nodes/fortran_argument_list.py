@@ -11,6 +11,7 @@ from castep_linter.fortran.fortran_nodes.fortran_node import FortranNode
 from castep_linter.fortran.fortran_raw_types import Fortran
 from castep_linter.fortran.identifier import Identifier
 
+SKIP_ARGS_LIST = {"&",",",""}
 
 class FortranArgumentList(FortranNode):
     """Parser for fortran argument lists"""
@@ -39,14 +40,13 @@ class FortranArgumentList(FortranNode):
         Convert a fortran argument list into a args, kwargs pair.
         The keyword arguments will be converted into identifiers.
         """
-
         args = []
         kwargs = {}
 
         parsing_arg_list = True
 
         for child in self.children[1:-1]:
-            if child.raw == ",":
+            if child.is_type(Fortran.COMMENT) or (child.is_type(Fortran.UNKNOWN) and child.raw in SKIP_ARGS_LIST):
                 continue
 
             if child.is_type(Fortran.KEYWORD_ARGUMENT):
@@ -57,8 +57,6 @@ class FortranArgumentList(FortranNode):
             elif child.is_type(Fortran.KEYWORD_ARGUMENT):
                 key, _, value = child.children
                 kwargs[Identifier.from_node(key)] = value
-            elif child.is_type(Fortran.COMMENT):
-                continue
             else:
                 err = f"Unknown argument list item in keyword arguments: {child.type}: \n{child.raw}\nin\n{self.raw}"
                 raise ValueError(err)

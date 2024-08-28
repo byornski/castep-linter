@@ -45,3 +45,22 @@ def test_complex_wrong_kind(parse: Parser, test_list: CheckFunctionDict):
     code = b"y = CMPLX(a, b, x)"
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 1
+
+def test_complex_multiline_correct(parse: Parser, test_list: CheckFunctionDict):
+    code = b"""y = CMPLX(&
+    a, b, dp)"""
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    assert len(error_log.errors) == 0
+
+def test_complex_multiline_correct_double_amp(parse: Parser, test_list: CheckFunctionDict):
+    code = b"""y = CMPLX(&
+    &a, b, dp)"""
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    assert len(error_log.errors) == 0
+
+    
+def test_complex_multiline_incorrect(parse: Parser, test_list: CheckFunctionDict):
+    code = b"""y = CMPLX(&
+    a, b, a)"""
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    assert len(error_log.errors) == 1
