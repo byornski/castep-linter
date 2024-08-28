@@ -26,8 +26,8 @@ classifiers = [
 ]
 dependencies = [
   "rich",
-  "tree_sitter",
-  "tree-sitter-language-pack",
+  "tree-sitter",
+  "tree-sitter-fortran",
   "junitparser",
 ]
 
@@ -71,8 +71,8 @@ dependencies = [
   "mypy>=1.0.0",
   "ruff>=0.0.243",
   "rich",
-  "tree_sitter",
-  "tree-sitter-language-pack",
+  "tree-sitter",
+  "tree-sitter-fortran",
   "junitparser",
   "pytest",
 ]

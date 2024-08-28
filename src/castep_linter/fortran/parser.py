@@ -3,8 +3,8 @@
 import pathlib
 from typing import Callable, Generator, Optional
 
-from tree_sitter import Parser
-from tree_sitter_language_pack import get_parser
+import tree_sitter_fortran
+from tree_sitter import Language, Parser
 
 from castep_linter.fortran import node_factory
 from castep_linter.fortran.fortran_nodes import FortranNode
@@ -12,7 +12,7 @@ from castep_linter.fortran.fortran_nodes import FortranNode
 
 def get_fortran_parser() -> Parser:
     """Get a tree-sitter-fortran parser from fortran_language_pack"""
-    return get_parser("fortran")
+    return Parser(Language(tree_sitter_fortran.language()))
 
 
 class FortranTree:
