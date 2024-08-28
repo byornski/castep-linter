@@ -57,17 +57,23 @@ class FortranMsgBase:
 
             file_str = str(filename)
 
-            if self.num_lines == 1:
-                line = fd.read().splitlines()[start_line].decode(errors="replace")
-                context = f"{file_str}:{start_line+1:{self.LINE_NUMBER_OFFSET}}>{line}"
-                if underline:
-                    context += (
-                        "\n"
-                        + " " * (len(file_str) + 1)
-                        + " " * (self.LINE_NUMBER_OFFSET + 1)
-                        + " " * start_char
-                        + "^" * self.num_chars
-                    )
+            line = fd.read().splitlines()[start_line].decode(errors="replace")
+            
+            # Fix the correct number of error characters on a multiline error
+            if self.num_lines > 1:
+                num_chars = len(line) - start_char
+            else:
+                num_chars = self.num_chars
+
+            context = f"{file_str}:{start_line+1:{self.LINE_NUMBER_OFFSET}}>{line}"
+            if underline:
+                context += (
+                    "\n"
+                    + " " * (len(file_str) + 1)
+                    + " " * (self.LINE_NUMBER_OFFSET + 1)
+                    + " " * start_char
+                    + "^" * num_chars
+                )
         return context
 
     @property
