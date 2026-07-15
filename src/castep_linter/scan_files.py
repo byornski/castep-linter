@@ -11,7 +11,7 @@ from rich.console import Console
 
 from castep_linter import error_logging
 from castep_linter.error_logging.error_types import PrintStyle
-from castep_linter.error_logging.json_writer import write_json
+from castep_linter.error_logging.json_writer import write_codeclimate, write_jenkins
 from castep_linter.error_logging.xml_writer import write_xml
 from castep_linter.fortran import parser
 from castep_linter.tests import CheckFunction, test_list
@@ -74,6 +74,9 @@ def parse_args():
     )
     arg_parser.add_argument(
         "-j", "--json", type=pathlib.Path, help="File for Jenkins json output if required"
+    )
+    arg_parser.add_argument(
+        "-c", "--codeclimate", type=pathlib.Path, help="File for CodeClimate jason output if required"
     )
     arg_parser.add_argument(
         "-p", "--parallel", type=int, default=1, help="How many threads to use for scanning"
@@ -139,7 +142,9 @@ def main() -> None:
     if args.xml:
         write_xml(args.xml, error_logs, error_logging.ERROR_SEVERITY[args.level])
     if args.json:
-        write_json(args.json, error_logs, error_logging.ERROR_SEVERITY[args.level])
+        write_jenkins(args.json, error_logs, error_logging.ERROR_SEVERITY[args.level])
+    if args.codeclimate:
+        write_codeclimate(args.codeclimate, error_logs, error_logging.ERROR_SEVERITY[args.level])
 
     # Exit with an error code if there were any errors
     if any(e.has_errors_above(args.level) for e in error_logs.values()):
