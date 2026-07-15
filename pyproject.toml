@@ -7,7 +7,7 @@ name = "castep-linter"
 dynamic = ["version"]
 description = ''
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 license = "MIT"
 keywords = []
 authors = [
