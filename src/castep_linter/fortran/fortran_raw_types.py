@@ -38,6 +38,7 @@ class FType(Enum):
     REAL = auto()
     DOUBLE = auto()
     COMPLEX = auto()
+    DOUBLE_COMPLEX = auto()
     INTEGER = auto()
     LOGICAL = auto()
     CHARACTER = auto()

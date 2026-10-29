@@ -37,13 +37,15 @@ class FortranVariableDeclaration(FortranNode):
             return FType.OTHER
 
         # The kind specifier is part of the intrinsic type node, so only use the type keywords
+        # Double types may be written as one word or two, eg "doubleprecision" or "double precision"
         type_words = [c.raw for c in intrinsic_type.children if not c.is_type(Fortran.KIND)]
-        fortran_type = " ".join(type_words).upper()
+        fortran_type = "".join("".join(type_words).split()).upper()
+        if fortran_type == "DOUBLEPRECISION":
+            return FType.DOUBLE
+        if fortran_type == "DOUBLECOMPLEX":
+            return FType.DOUBLE_COMPLEX
         try:
-            if fortran_type == "DOUBLE PRECISION":
-                return FType.DOUBLE
-            else:
-                return FType[fortran_type]
+            return FType[fortran_type]
         except KeyError:
             return FType.OTHER
 

@@ -3,6 +3,7 @@ from unittest import mock
 
 import pytest
 
+from castep_linter.error_logging.error_types import FortranWarning
 from castep_linter.fortran.node_type_err import WrongNodeError
 from castep_linter.scan_files import run_tests_on_code
 from castep_linter.tests import CheckFunctionDict, check_real_dp_declaration
@@ -37,12 +38,6 @@ def test_real_dp_by_position(parse: Parser, test_list: CheckFunctionDict):
     code = b"real(dp) :: y"
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 1
-
-
-def test_real_dp_by_d0(parse: Parser, test_list: CheckFunctionDict):
-    code = b"DOUBLE PRECISION :: y"
-    error_log = run_tests_on_code(parse(code), test_list, "filename")
-    assert len(error_log.errors) == 0
 
 
 def test_real_dp_no_kind(parse: Parser, test_list: CheckFunctionDict):
@@ -97,3 +92,19 @@ def test_derived_type_declaration(parse: Parser, test_list: CheckFunctionDict):
     code = b"type(z) :: y"
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 0
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        b"double precision :: y",
+        b"DOUBLE PRECISION :: y",
+        b"doubleprecision :: y",
+        b"DOUBLE   PRECISION, intent(in) :: y",
+    ],
+)
+def test_double_precision_declaration(parse: Parser, test_list: CheckFunctionDict, code):
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    assert [(type(e), e.message) for e in error_log.errors] == [
+        (FortranWarning, "double precision used instead of real(kind=dp)")
+    ]

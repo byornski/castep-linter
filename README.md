@@ -23,7 +23,7 @@ end subroutine comms_abort
 |---|---|
 | `TRACE` | Subroutines and functions call `trace_entry` and `trace_exit` with their own name |
 | `ALLOC` | `allocate` statements have a `stat` which is checked straight afterwards |
-| `KIND` | `real` and `complex` declarations have a `kind=dp` |
+| `KIND` | `real` and `complex` declarations have a `kind=dp`, rather than a numeric kind or `double precision`/`double complex` |
 | `LITERAL_KIND` | Real literals have a `_dp` kind and integer literals a valid kind |
 | `CMPLX_KIND` | `cmplx(...)` is given a `kind=dp` |
 

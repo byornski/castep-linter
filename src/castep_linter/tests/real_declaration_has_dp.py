@@ -19,6 +19,14 @@ def check_real_dp_declaration(node: FortranNode, error_log: ErrorLogger) -> None
         err = "Expected variable declaration node"
         raise WrongNodeError(err)
 
+    if node.var_type == FType.DOUBLE:
+        error_log.add_msg("Warning", node, "double precision used instead of real(kind=dp)")
+        return
+
+    if node.var_type == FType.DOUBLE_COMPLEX:
+        error_log.add_msg("Warning", node, "double complex used instead of complex(kind=dp)")
+        return
+
     if node.var_type not in [FType.REAL, FType.COMPLEX]:
         return
 
