@@ -90,8 +90,8 @@ def check_trace_entry_exit(node: FortranNode, error_log: ErrorLogger) -> None:
                 error_log.add_msg("Error", trace_node, err)
 
         else:
-            err = f"Unrecognisable {routine.raw} {trace_node.type=} {routine}"
-            raise ValueError(err)
+            err = f"Unrecognised name passed to trace in {subroutine_name}"
+            error_log.add_msg("Error", trace_node, err)
 
     if not has_trace_entry:
         error_log.add_msg("Info", node, f"Missing trace_entry in {subroutine_name}")

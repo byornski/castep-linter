@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0116,C0114
 import pytest
 
+from castep_linter.error_logging.error_types import FortranError
 from castep_linter.scan_files import run_tests_on_code
 from castep_linter.tests import CheckFunctionDict, check_trace_entry_exit
 from tests.conftest import CodeWrapper, Parser
@@ -173,6 +174,20 @@ def test_trace_entry_exit_unknown_name(
     """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 2
+
+
+@pytest.mark.parametrize("name", [b"names(1)", b'"x"//"y"', b"obj%name", b"trim(sub)", b'("x")'])
+def test_trace_entry_exit_unrecognised_name(
+    parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict, name
+):
+    code = subroutine_wrapper(
+        b"call trace_entry(" + name + b", stat)\ncall trace_exit(" + name + b", stat)\n"
+    )
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    assert [(type(e), e.message) for e in error_log.errors] == [
+        (FortranError, "Unrecognised name passed to trace in x"),
+        (FortranError, "Unrecognised name passed to trace in x"),
+    ]
 
 
 def test_trace_entry_exit_correct_caps(parse: Parser, test_list: CheckFunctionDict):
