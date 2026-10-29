@@ -53,3 +53,44 @@ def test_report_line_numbers_are_one_indexed(parse: Parser, tmp_path: pathlib.Pa
     (jenkins,) = json.loads(jenkins_file.read_text())["issues"]
     assert codeclimate["location"]["lines"]["begin"] == 4
     assert jenkins["lineStart"] == 4
+
+
+def codeclimate_fingerprints(parse: Parser, tmp_path: pathlib.Path, code: bytes) -> list:
+    source = tmp_path / "file.f90"
+    source.write_bytes(code)
+    error_log = run_tests_on_code(parse(code), test_list, str(source))
+
+    report = tmp_path / "codeclimate.json"
+    write_codeclimate(report, {str(source): error_log}, 0)
+    return [(i["description"], i["fingerprint"]) for i in json.loads(report.read_text())]
+
+
+ROUTINE = b"""module foo
+contains
+subroutine x()
+%s
+  real :: a
+  real :: a
+  real :: b
+end subroutine x
+end module foo
+"""
+
+
+def test_fingerprints_unique(parse: Parser, tmp_path: pathlib.Path):
+    issues = codeclimate_fingerprints(parse, tmp_path, ROUTINE % b"")
+    assert len(issues) == 5
+    assert len({fingerprint for _, fingerprint in issues}) == 5
+
+
+def test_fingerprints_unchanged_by_moving_lines(parse: Parser, tmp_path: pathlib.Path):
+    before = codeclimate_fingerprints(parse, tmp_path, ROUTINE % b"")
+    after = codeclimate_fingerprints(parse, tmp_path, ROUTINE % b"  ! A new comment\n\n")
+    assert before == after
+
+
+def test_fingerprints_change_with_flagged_line(parse: Parser, tmp_path: pathlib.Path):
+    before = codeclimate_fingerprints(parse, tmp_path, ROUTINE % b"")
+    after = codeclimate_fingerprints(parse, tmp_path, (ROUTINE % b"").replace(b"b\n", b"c\n"))
+    changed = [desc for (desc, old), (_, new) in zip(before, after) if old != new]
+    assert changed == ["No kind specifier"]

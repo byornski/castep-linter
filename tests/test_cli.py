@@ -100,3 +100,17 @@ def test_cli_writes_reports(tmp_path: pathlib.Path, source_files: List[pathlib.P
     assert xml_file.read_text().strip()
     assert json.loads(json_file.read_text())["issues"]
     assert json.loads(codeclimate_file.read_text())
+
+
+def test_cli_codeclimate_fingerprints_stable(
+    tmp_path: pathlib.Path, source_files: List[pathlib.Path]
+):
+    # Each run is a new Python process, so this would catch use of the randomised hash()
+    fingerprints = []
+    for run in range(2):
+        report = tmp_path / f"codeclimate_{run}.json"
+        run_linter(["-q", "-c", str(report), *map(str, source_files)], tmp_path)
+        fingerprints.append([i["fingerprint"] for i in json.loads(report.read_text())])
+
+    assert fingerprints[0] == fingerprints[1]
+    assert len(set(fingerprints[0])) == len(fingerprints[0])
