@@ -16,6 +16,9 @@ from castep_linter.fortran.fortran_raw_types import Fortran, FortranContexts
 DIRECTIVE = re.compile(r"!\s*castep-lint\s*:\s*disable\s*=\s*(.+)", re.IGNORECASE)
 MARKER = re.compile(r"castep-lint", re.IGNORECASE)
 
+# Name for problems with the comments themselves, which cannot be disabled
+DIRECTIVE_CHECK = "DIRECTIVE"
+
 Point = Tuple[int, ...]
 
 
@@ -46,12 +49,12 @@ class Suppressions:
         match = DIRECTIVE.fullmatch(node.raw.strip())
         if not match:
             if MARKER.search(node.raw):
-                error_log.add_msg("Warning", node, "Malformed castep-lint comment")
+                _warn(error_log, node, "Malformed castep-lint comment")
             return
 
         names = [name.strip() for name in match.group(1).split(",") if name.strip()]
         if not names:
-            error_log.add_msg("Warning", node, "castep-lint comment names no checks")
+            _warn(error_log, node, "castep-lint comment names no checks")
             return
 
         checks = set()
@@ -62,7 +65,7 @@ class Suppressions:
             else:
                 expected = ", ".join(sorted(self.valid_checks))
                 err = f"Unknown check '{name}' in castep-lint comment, expected one of {expected}"
-                error_log.add_msg("Warning", node, err)
+                _warn(error_log, node, err)
 
         row, column = node.node.start_point
         parent = node.node.parent
@@ -72,7 +75,7 @@ class Suppressions:
         elif parent is not None and FortranNode(parent).ftype in FortranContexts:
             self.routines[_extent(FortranNode(parent))].update(checks)
         else:
-            error_log.add_msg("Warning", node, "castep-lint comment has no effect here")
+            _warn(error_log, node, "castep-lint comment has no effect here")
 
     def _add_continuation(self, node: FortranNode) -> None:
         row, column = node.node.start_point
@@ -146,3 +149,8 @@ class Suppressions:
 
 def _extent(node: FortranNode) -> Tuple[Point, Point]:
     return tuple(node.node.start_point), tuple(node.node.end_point)
+
+
+def _warn(error_log: ErrorLogger, node: FortranNode, message: str) -> None:
+    error_log.add_msg("Warning", node, message)
+    error_log.errors[-1].check = DIRECTIVE_CHECK

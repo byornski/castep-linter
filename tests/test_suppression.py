@@ -3,7 +3,9 @@ import json
 import pathlib
 from typing import List
 
-from castep_linter.error_logging.json_writer import write_codeclimate
+import pytest
+
+from castep_linter.error_logging.json_writer import write_codeclimate, write_jenkins
 from castep_linter.scan_files import run_tests_on_code
 from castep_linter.tests import test_list
 from tests.conftest import CodeWrapper, Parser
@@ -198,18 +200,62 @@ def test_routine_directive_does_not_affect_module(parse: Parser):
     assert messages(parse, code) == ["No kind specifier", "Float literal without kind"]
 
 
-def test_codeclimate_uses_check_name(
+def report_names(error_log, tmp_path: pathlib.Path) -> tuple:
+    """Names given to each issue in the CodeClimate and Jenkins reports"""
+    codeclimate_file = tmp_path / "codeclimate.json"
+    write_codeclimate(codeclimate_file, {"filename": error_log}, 0)
+    jenkins_file = tmp_path / "jenkins.json"
+    write_jenkins(jenkins_file, {"filename": error_log}, 0)
+
+    codeclimate = [issue["check_name"] for issue in json.loads(codeclimate_file.read_text())]
+    jenkins = [issue["type"] for issue in json.loads(jenkins_file.read_text())["issues"]]
+    return codeclimate, jenkins
+
+
+def test_reports_use_check_name(
     parse: Parser, subroutine_wrapper: CodeWrapper, tmp_path: pathlib.Path
 ):
-    # determine_type alone cannot classify this message from its text
+    # The message text does not say which check found it
     code = subroutine_wrapper(b'call trace_entry(unknown_var, stat)\ncall trace_exit("x", stat)\n')
     error_log = run_tests_on_code(parse(code), test_list, "filename")
+    assert report_names(error_log, tmp_path) == (["TRACE"], ["TRACE"])
 
-    out_file = tmp_path / "codeclimate.json"
-    write_codeclimate(out_file, {"filename": error_log}, 0)
 
-    issues = json.loads(out_file.read_text())
-    assert [issue["check_name"] for issue in issues] == ["TRACE"]
+def module_with_comment(module_comment: bytes, routine_comment: bytes) -> bytes:
+    return (
+        b"module foo\n"
+        + module_comment
+        + b"\ncontains\nsubroutine x()\n"
+        + routine_comment
+        + b"\n"
+        + TRACE
+        + b"end subroutine x\nend module foo"
+    )
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        module_with_comment(b"", b"! castep-lint disable=trace"),
+        module_with_comment(b"", b"! castep-lint: disable=,"),
+        module_with_comment(b"", b"! castep-lint: disable=trace, bogus"),
+        module_with_comment(b"! castep-lint: disable=trace", b""),
+    ],
+    ids=["malformed", "no checks", "unknown check", "no effect"],
+)
+def test_reports_name_directive_warnings(parse: Parser, tmp_path: pathlib.Path, code):
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    assert report_names(error_log, tmp_path) == (["DIRECTIVE"], ["DIRECTIVE"])
+
+
+def test_directive_warnings_cannot_be_disabled(parse: Parser, subroutine_wrapper: CodeWrapper):
+    code = subroutine_wrapper(b"! castep-lint: disable=directive\n" + TRACE)
+    assert messages(parse, code) == [
+        (
+            "Unknown check 'directive' in castep-lint comment, "
+            "expected one of ALLOC, CMPLX_KIND, KIND, LITERAL_KIND, TRACE"
+        )
+    ]
 
 
 def test_comment_not_utf8(parse: Parser, subroutine_wrapper: CodeWrapper):

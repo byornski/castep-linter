@@ -8,6 +8,9 @@ from typing import Literal, TypedDict
 from castep_linter.error_logging.error_types import FORTRAN_ERRORS
 from castep_linter.error_logging.logger import ErrorLogger
 
+# Reported for anything not found by a named check
+UNKNOWN_CHECK = "UNKNOWN"
+
 JenkinsSeverityLevel = Literal["LOW", "NORMAL", "HIGH", "ERROR"]
 Jenkins_severity_dict: dict[int, JenkinsSeverityLevel] = {
     FORTRAN_ERRORS["Error"].ERROR_SEVERITY: "HIGH",
@@ -74,7 +77,7 @@ def write_jenkins(file: Path, error_logs: dict[str, ErrorLogger], error_level: i
             fileName=scanned_file,
             severity=Jenkins_severity_dict[error.ERROR_SEVERITY],
             message=error.message,
-            type=determine_type(error.message),
+            type=error.check or UNKNOWN_CHECK,
             lineStart=error.start_point[0] + 1,  # Jenkins lines 1-indexed
             lineEnd=error.end_point[0] + 1,
             columnStart=error.start_point[1] + 1,
@@ -98,7 +101,7 @@ def write_jenkins(file: Path, error_logs: dict[str, ErrorLogger], error_level: i
 def write_codeclimate(file: Path, error_logs: dict[str, ErrorLogger], error_level: int) -> None:
     issues: list[CodeClimateIssue] = [
         CodeClimateIssue(
-            check_name=error.check or determine_type(error.message),
+            check_name=error.check or UNKNOWN_CHECK,
             description=error.message,
             fingerprint=str(abs(hash(scanned_file + error.message))),
             severity=CodeClimate_severity_dict[error.ERROR_SEVERITY],
@@ -127,23 +130,3 @@ def write_json(
     else:
         msg = "Unrecognised out format."
         raise KeyError(msg)
-
-
-def determine_type(message: str) -> str:
-    """Determine type of error from key components"""
-    if "alloc" in message.lower():
-        return "ALLOC"
-
-    if "complex intrinsic" in message:
-        return "CMPLX_KIND"
-
-    if "literal" in message:
-        return "LITERAL_KIND"
-
-    if "kind" in message or "Kind" in message:
-        return "KIND"
-
-    if "Missing trace_" in message or "Incorrect name" in message:
-        return "TRACE"
-
-    return "UNKNOWN"

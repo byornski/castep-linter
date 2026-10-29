@@ -27,4 +27,4 @@ end subroutine comms_abort
 | `LITERAL_KIND` | Real literals have a `_dp` kind and integer literals a valid kind |
 | `CMPLX_KIND` | `cmplx(...)` is given a `kind=dp` |
 
-These are also the `check_name`s in the CodeClimate report. An unknown name, or a comment which does not apply to anything, is reported as a warning.
+These are also the names used in the CodeClimate (`check_name`) and Jenkins (`type`) reports. An unknown name, a comment which names no checks or does not apply to anything, and a malformed comment are reported as warnings named `DIRECTIVE`, which cannot be disabled.
