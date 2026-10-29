@@ -9,7 +9,18 @@ description = "Linter which checks CASTEP's Fortran source code against its codi
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
-keywords = []
+keywords = [
+  "castep",
+  "fortran",
+  "linter",
+  "static-analysis",
+  "code-quality",
+  "tree-sitter",
+  "dft",
+  "codeclimate",
+  "junit",
+  "jenkins",
+]
 authors = [
   { name = "Peter Byrne", email = "peter.byrne@york.ac.uk" },
 ]
