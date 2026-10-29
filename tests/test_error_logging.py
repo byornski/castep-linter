@@ -1,10 +1,13 @@
 # pylint: disable=W0621,C0116,C0114
 import io
+import json
+import pathlib
 import pickle
 
 from rich.console import Console
 
 from castep_linter.error_logging.error_types import PrintStyle
+from castep_linter.error_logging.json_writer import write_codeclimate, write_jenkins
 from castep_linter.scan_files import run_tests_on_code
 from castep_linter.tests import test_list
 from tests.conftest import CodeWrapper, Parser
@@ -33,3 +36,20 @@ def test_gcc_format_is_one_indexed(parse: Parser):
     error.print_err("file.f90", Console(file=output, width=200), print_style=PrintStyle.GCC)
 
     assert output.getvalue().strip() == "file.f90:4:3: Error: No kind specifier"
+
+
+def test_report_line_numbers_are_one_indexed(parse: Parser, tmp_path: pathlib.Path):
+    # The declaration is on line 4 of the file
+    code = b"module foo\ncontains\nsubroutine x(y)\n  real :: z\nend subroutine x\nend module foo\n"
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    error_log.errors = [e for e in error_log.errors if e.message == "No kind specifier"]
+
+    codeclimate_file = tmp_path / "codeclimate.json"
+    write_codeclimate(codeclimate_file, {"file.f90": error_log}, 0)
+    jenkins_file = tmp_path / "jenkins.json"
+    write_jenkins(jenkins_file, {"file.f90": error_log}, 0)
+
+    (codeclimate,) = json.loads(codeclimate_file.read_text())
+    (jenkins,) = json.loads(jenkins_file.read_text())["issues"]
+    assert codeclimate["location"]["lines"]["begin"] == 4
+    assert jenkins["lineStart"] == 4
