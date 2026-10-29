@@ -16,7 +16,7 @@ RUN hatch build -t wheel /dist
 FROM python:3.14-slim
 
 LABEL org.opencontainers.image.source="https://github.com/byornski/castep-linter"
-LABEL org.opencontainers.image.description="Code linter for CASTEP"
+LABEL org.opencontainers.image.description="Linter which checks CASTEP's Fortran source code against its coding conventions"
 LABEL org.opencontainers.image.licenses="MIT"
 
 COPY --from=build /dist /tmp/dist

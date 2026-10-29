@@ -91,6 +91,9 @@ jobs:
         tags: |
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
+        # Otherwise taken from the GitHub repository, which has no description
+        labels: |
+          org.opencontainers.image.description=Linter which checks CASTEP's Fortran source code against its coding conventions
     - name: Build and push image
       uses: docker/build-push-action@v7
       with:

@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "castep-linter"
 dynamic = ["version"]
-description = ''
+description = "Linter which checks CASTEP's Fortran source code against its coding conventions"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
