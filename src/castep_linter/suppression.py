@@ -49,14 +49,19 @@ class Suppressions:
                 error_log.add_msg("Warning", node, "Malformed castep-lint comment")
             return
 
+        names = [name.strip() for name in match.group(1).split(",") if name.strip()]
+        if not names:
+            error_log.add_msg("Warning", node, "castep-lint comment names no checks")
+            return
+
         checks = set()
-        for name in match.group(1).split(","):
-            check = name.strip().upper()
+        for name in names:
+            check = name.upper()
             if check in self.valid_checks:
                 checks.add(check)
-            elif check:
+            else:
                 expected = ", ".join(sorted(self.valid_checks))
-                err = f"Unknown check '{name.strip()}' in castep-lint comment, expected one of {expected}"
+                err = f"Unknown check '{name}' in castep-lint comment, expected one of {expected}"
                 error_log.add_msg("Warning", node, err)
 
         row, column = node.node.start_point

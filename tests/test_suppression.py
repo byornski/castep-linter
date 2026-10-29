@@ -156,6 +156,48 @@ def test_malformed_directive(parse: Parser, subroutine_wrapper: CodeWrapper):
     ]
 
 
+def test_trailing_comma_ignored(parse: Parser, subroutine_wrapper: CodeWrapper):
+    code = subroutine_wrapper(b"! castep-lint: disable=trace,\n")
+    assert messages(parse, code) == []
+
+
+def test_directive_naming_no_checks(parse: Parser, subroutine_wrapper: CodeWrapper):
+    code = subroutine_wrapper(b"! castep-lint: disable=,\n")
+    assert messages(parse, code) == [
+        "Missing trace_entry in x",
+        "Missing trace_exit in x",
+        "castep-lint comment names no checks",
+    ]
+
+
+def test_continued_statement_at_end_of_file(parse: Parser):
+    code = b"program p\nx = 1.0 + &\n    2.0  ! castep-lint: disable=literal_kind"
+    assert messages(parse, code) == []
+
+
+def test_continued_statement_at_start_of_file(parse: Parser):
+    code = b"x = 1.0 + &  ! castep-lint: disable=literal_kind\n    2.0\nend"
+    assert messages(parse, code) == []
+
+
+def test_continuation_on_last_line_of_file(parse: Parser):
+    # Not valid Fortran, but must not crash looking for the next line
+    code = b"program p\nx = 1.0 + &  ! castep-lint: disable=literal_kind"
+    assert messages(parse, code) == []
+
+
+def test_routine_directive_does_not_affect_module(parse: Parser):
+    code = b"""module foo
+    real :: m = 1.0
+    contains
+    subroutine x()
+    ! castep-lint: disable=literal_kind, trace
+    y = 2.0
+    end subroutine x
+    end module foo"""
+    assert messages(parse, code) == ["No kind specifier", "Float literal without kind"]
+
+
 def test_codeclimate_uses_check_name(
     parse: Parser, subroutine_wrapper: CodeWrapper, tmp_path: pathlib.Path
 ):
