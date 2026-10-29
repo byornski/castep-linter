@@ -23,8 +23,9 @@ class FortranMsgBase:
 
     def __init__(self, node: FortranNode, message: str) -> None:
         self.message = message
-        self.start_point = node.node.start_point  # TODO FIX
-        self.end_point = node.node.end_point
+        # Store as plain tuples: tree_sitter.Point does not survive pickling for multiprocessing
+        self.start_point = tuple(node.node.start_point)
+        self.end_point = tuple(node.node.end_point)
 
     def print_err(
         self, filename: str, console, *, print_style: PrintStyle = PrintStyle.ANNOTATED

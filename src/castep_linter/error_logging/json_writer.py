@@ -113,8 +113,13 @@ def write_codeclimate(file: Path, error_logs: dict[str, ErrorLogger], error_leve
         json.dump(issues, out_file, indent=2)
 
 
-
-def write_json(file: Path, error_logs: dict[str, ErrorLogger], error_level: int, *, out_format: Formats = Formats.Jenkins):
+def write_json(
+    file: Path,
+    error_logs: dict[str, ErrorLogger],
+    error_level: int,
+    *,
+    out_format: Formats = Formats.Jenkins,
+):
     if out_format is Formats.CodeClimate:
         write_codeclimate(file, error_logs, error_level)
     elif out_format is Formats.Jenkins:

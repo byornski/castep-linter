@@ -32,7 +32,14 @@ class FortranVariableDeclaration(FortranNode):
     def parse_fort_type(self) -> FType:
         """Parse a variable declaration for type"""
         try:
-            fortran_type = self.get(Fortran.INTRINSIC_TYPE).raw.upper()
+            intrinsic_type = self.get(Fortran.INTRINSIC_TYPE)
+        except KeyError:
+            return FType.OTHER
+
+        # The kind specifier is part of the intrinsic type node, so only use the type keywords
+        type_words = [c.raw for c in intrinsic_type.children if not c.is_type(Fortran.KIND)]
+        fortran_type = " ".join(type_words).upper()
+        try:
             if fortran_type == "DOUBLE PRECISION":
                 return FType.DOUBLE
             else:
@@ -51,7 +58,7 @@ class FortranVariableDeclaration(FortranNode):
     def parse_fort_var_size(self) -> FortranArgumentList:
         """Parse a variable declaration for a size, eg kind=8"""
         try:
-            fortran_size = self.get(Fortran.SIZE).get(Fortran.ARGUMENT_LIST)
+            fortran_size = self.get(Fortran.INTRINSIC_TYPE).get(Fortran.KIND)
         except KeyError:
             return FortranArgumentList(None)
 
@@ -64,7 +71,7 @@ class FortranVariableDeclaration(FortranNode):
     def parse_fort_var_names(self) -> Dict[Identifier, Optional[str]]:
         """Parse variable declaration statement for variables and optionally assignments"""
         myvars: Dict[Identifier, Optional[str]] = {}
-        for assignment in self.get_children_by_name(Fortran.ASSIGNMENT_STMT):
+        for assignment in self.get_children_by_name(Fortran.INIT_DECLARATOR):
             lhs, rhs = assignment.split()
             #   lhs, rhs = split_relational_node(assignment)
             varname = Identifier.from_node(lhs)

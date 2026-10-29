@@ -29,6 +29,7 @@ def subroutine_wrapper() -> CodeWrapper:
     def _subroutine_wrapper(code: bytes) -> bytes:
         return (
             b"""module foo
+            contains
             subroutine x(y)
             """
             + code
@@ -47,6 +48,7 @@ def function_wrapper() -> CodeWrapper:
     def _function_wrapper(code: bytes) -> bytes:
         return (
             b"""module foo
+            contains
             function x(y)
             """
             + code

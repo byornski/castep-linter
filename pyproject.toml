@@ -7,7 +7,7 @@ name = "castep-linter"
 dynamic = ["version"]
 description = ''
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = "MIT"
 keywords = []
 authors = [
@@ -16,18 +16,18 @@ authors = [
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.7",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
   "rich",
-  "tree-sitter==0.23.1",
-  "tree-sitter-fortran==0.0.1",
+  "tree-sitter==0.26.0",
+  "tree-sitter-fortran==0.6.0",
   "junitparser",
 ]
 
@@ -62,7 +62,7 @@ cov = [
 ]
 
 [[tool.hatch.envs.all.matrix]]
-python = ["3.7", "3.8", "3.9", "3.10", "3.11"]
+python = ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
 [tool.hatch.envs.lint]
 detached = true
@@ -71,8 +71,8 @@ dependencies = [
   "mypy>=1.0.0",
   "ruff>=0.0.243",
   "rich",
-  "tree-sitter==0.23.0",
-  "tree-sitter-fortran==0.0.1",
+  "tree-sitter==0.26.0",
+  "tree-sitter-fortran==0.6.0",
   "junitparser",
   "pytest",
 ]

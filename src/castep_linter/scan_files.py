@@ -76,7 +76,10 @@ def parse_args():
         "-j", "--json", type=pathlib.Path, help="File for Jenkins json output if required"
     )
     arg_parser.add_argument(
-        "-c", "--codeclimate", type=pathlib.Path, help="File for CodeClimate jason output if required"
+        "-c",
+        "--codeclimate",
+        type=pathlib.Path,
+        help="File for CodeClimate jason output if required",
     )
     arg_parser.add_argument(
         "-p", "--parallel", type=int, default=1, help="How many threads to use for scanning"

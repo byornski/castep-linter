@@ -11,8 +11,10 @@ class Fortran(Enum):
     FUNCTION_STMT = "function_statement"
     NAME = "name"
     SIZE = "size"
+    KIND = "kind"
     INTRINSIC_TYPE = "intrinsic_type"
     ASSIGNMENT_STMT = "assignment_statement"
+    INIT_DECLARATOR = "init_declarator"
     ARGUMENT_LIST = "argument_list"
     SUBROUTINE_CALL = "subroutine_call"
     IDENTIFIER = "identifier"
@@ -25,6 +27,7 @@ class Fortran(Enum):
     NUMBER_LITERAL = "number_literal"
     TYPE_QUALIFIER = "type_qualifier"
     CALL_EXPRESSION = "call_expression"
+    ALLOCATE_STMT = "allocate_statement"
 
     UNKNOWN = "unknown"
 

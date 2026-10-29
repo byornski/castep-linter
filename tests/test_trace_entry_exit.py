@@ -14,12 +14,10 @@ def test_list() -> CheckFunctionDict:
 def test_trace_entry_exit_correct(
     parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
 ):
-    code = subroutine_wrapper(
-        b"""
+    code = subroutine_wrapper(b"""
     call trace_entry("x", stat)
     call trace_exit("x", stat)
-    """
-    )
+    """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 0, error_log.errors
 
@@ -27,13 +25,11 @@ def test_trace_entry_exit_correct(
 def test_trace_entry_exit_correct_extra(
     parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
 ):
-    code = subroutine_wrapper(
-        b"""
+    code = subroutine_wrapper(b"""
     call trace_entry("x", stat)
     call bleh()
     call trace_exit("x", stat)
-    """
-    )
+    """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 0
 
@@ -41,12 +37,10 @@ def test_trace_entry_exit_correct_extra(
 def test_trace_entry_exit_correct_keyword(
     parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
 ):
-    code = subroutine_wrapper(
-        b"""
+    code = subroutine_wrapper(b"""
     call trace_entry(string="x", status=stat)
     call trace_exit(string="x", status=stat)
-    """
-    )
+    """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 0
 
@@ -54,13 +48,11 @@ def test_trace_entry_exit_correct_keyword(
 def test_trace_entry_exit_correct_by_param(
     parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
 ):
-    code = subroutine_wrapper(
-        b"""
+    code = subroutine_wrapper(b"""
     character(len=100), parameter :: sub_name = "x"
     call trace_entry(sub_name, stat)
     call trace_exit(sub_name, stat)
-    """
-    )
+    """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 0
 
@@ -68,16 +60,14 @@ def test_trace_entry_exit_correct_by_param(
 def test_trace_entry_exit_correct_by_param_extra(
     parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
 ):
-    code = subroutine_wrapper(
-        b"""
+    code = subroutine_wrapper(b"""
     character(len=100), parameter :: sub_name = "x"
     character(len=100), parameter :: bleh = othervar
     integer :: p
     type(myvar) :: z
     call trace_entry(sub_name, stat)
     call trace_exit(sub_name, stat)
-    """
-    )
+    """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 0
 
@@ -109,12 +99,10 @@ def test_trace_entry_exit_missing(
 def test_trace_entry_exit_wrong_name(
     parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
 ):
-    code = subroutine_wrapper(
-        b"""
+    code = subroutine_wrapper(b"""
     call trace_entry("y", stat)
     call trace_exit("y", stat)
-    """
-    )
+    """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 2
 
@@ -122,12 +110,10 @@ def test_trace_entry_exit_wrong_name(
 def test_trace_entry_exit_wrong_name_keyword(
     parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
 ):
-    code = subroutine_wrapper(
-        b"""
+    code = subroutine_wrapper(b"""
     call trace_entry(string="y", status=stat)
     call trace_exit(string="y", status=stat)
-    """
-    )
+    """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 2
 
@@ -135,13 +121,11 @@ def test_trace_entry_exit_wrong_name_keyword(
 def test_trace_entry_exit_wrong_name_by_param(
     parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
 ):
-    code = subroutine_wrapper(
-        b"""
+    code = subroutine_wrapper(b"""
     character(len=100), parameter :: sub_name = "y"
     call trace_entry(sub_name, stat)
     call trace_exit(sub_name, stat)
-    """
-    )
+    """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 2
 
@@ -149,12 +133,10 @@ def test_trace_entry_exit_wrong_name_by_param(
 def test_trace_entry_exit_wrong_name_exception(
     parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
 ):
-    code = subroutine_wrapper(
-        b"""
+    code = subroutine_wrapper(b"""
     call trace_entry("castep", stat)
     call trace_exit("castep", stat)
-    """
-    )
+    """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 0
 
@@ -162,13 +144,11 @@ def test_trace_entry_exit_wrong_name_exception(
 def test_trace_entry_exit_wrong_name_by_param_exception(
     parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
 ):
-    code = subroutine_wrapper(
-        b"""
+    code = subroutine_wrapper(b"""
     character(len=100), parameter :: sub_name = "castep"
     call trace_entry(sub_name, stat)
     call trace_exit(sub_name, stat)
-    """
-    )
+    """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 0
 
@@ -176,12 +156,10 @@ def test_trace_entry_exit_wrong_name_by_param_exception(
 def test_trace_entry_exit_no_name(
     parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
 ):
-    code = subroutine_wrapper(
-        b"""
+    code = subroutine_wrapper(b"""
     call trace_entry()
     call trace_exit()
-    """
-    )
+    """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 2
 
@@ -189,12 +167,10 @@ def test_trace_entry_exit_no_name(
 def test_trace_entry_exit_unknown_name(
     parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
 ):
-    code = subroutine_wrapper(
-        b"""
+    code = subroutine_wrapper(b"""
     call trace_entry(other_var)
     call trace_exit(other_var)
-    """
-    )
+    """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 2
 
@@ -243,12 +219,10 @@ def test_trace_entry_exit_correct_by_param_all_caps(parse: Parser, test_list: Ch
 def test_trace_entry_exit_correct_function(
     parse: Parser, function_wrapper: CodeWrapper, test_list: CheckFunctionDict
 ):
-    code = function_wrapper(
-        b"""
+    code = function_wrapper(b"""
         CALL TRACE_ENTRY("x", STAT)
         CALL TRACE_EXIT("x", STAT)
-    """
-    )
+    """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 0
 

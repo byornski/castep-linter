@@ -18,10 +18,15 @@ class FortranCallExpression(FortranNode):
 
         self.name = self._get_name()
 
-        try:
-            args = self.get(Fortran.ARGUMENT_LIST)
-        except KeyError:
-            args = FortranArgumentList(None)
+        args: FortranNode
+        if self.is_type(Fortran.ALLOCATE_STMT):
+            # Allocate statements hold their arguments directly rather than in an argument list
+            args = FortranArgumentList(call_expression_node)
+        else:
+            try:
+                args = self.get(Fortran.ARGUMENT_LIST)
+            except KeyError:
+                args = FortranArgumentList(None)
 
         if not isinstance(args, FortranArgumentList):
             err = f"Expected argument list but got {args}"
@@ -30,6 +35,8 @@ class FortranCallExpression(FortranNode):
         self.args = args
 
     def _get_name(self) -> Identifier:
+        if self.is_type(Fortran.ALLOCATE_STMT):
+            return Identifier("allocate")
         try:
             return Identifier.from_node(self.get(Fortran.IDENTIFIER))
         except KeyError:

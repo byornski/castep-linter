@@ -1,4 +1,4 @@
-""""Tests to be performed by the CASTEP Fortran linter"""
+"""Tests to be performed by the CASTEP Fortran linter"""
 
 from typing import Callable
 
@@ -17,6 +17,7 @@ test_list: CheckFunctionDict = {
     "variable_declaration": [check_real_dp_declaration],
     "subroutine": [check_trace_entry_exit],
     "function": [check_trace_entry_exit],
-    "call_expression": [check_complex_has_dp, check_allocate_has_stat],
+    "call_expression": [check_complex_has_dp],
+    "allocate_statement": [check_allocate_has_stat],
     "number_literal": [check_number_literal],
 }
