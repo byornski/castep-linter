@@ -63,6 +63,12 @@ def test_real_integer_kind_without_keyword(parse: Parser, test_list: CheckFuncti
     assert len(error_log.errors) == 1
 
 
+@pytest.mark.parametrize("code", [b"real*8 :: y", b"real*4 :: y", b"real * 8 :: y"])
+def test_real_star_kind(parse: Parser, test_list: CheckFunctionDict, code):
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    assert [e.message for e in error_log.errors] == ["Numeric kind specifier"]
+
+
 def test_real_bad_var_kind_without_keyword(parse: Parser, test_list: CheckFunctionDict):
     code = b"real(x) :: y"
     error_log = run_tests_on_code(parse(code), test_list, "filename")

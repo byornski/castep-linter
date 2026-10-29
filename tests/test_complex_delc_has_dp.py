@@ -45,6 +45,12 @@ def test_complex_integer_kind_without_keyword(parse: Parser, test_list: CheckFun
     assert len(error_log.errors) == 1
 
 
+def test_complex_star_kind(parse: Parser, test_list: CheckFunctionDict):
+    code = b"complex*16 :: y"
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    assert [e.message for e in error_log.errors] == ["Numeric kind specifier"]
+
+
 def test_complex_bad_var_kind_without_keyword(parse: Parser, test_list: CheckFunctionDict):
     code = b"complex(x) :: y"
     error_log = run_tests_on_code(parse(code), test_list, "filename")

@@ -48,10 +48,12 @@ class FortranArgumentList(FortranNode):
         parsing_arg_list = True
 
         # Arguments sit between the opening "(" and the final ")". The "(" is not always the
-        # first child (eg "allocate(...)"), and some nodes have no brackets at all (eg "real*8")
+        # first child (eg "allocate(...)")
         children = self.children
         open_bracket = next((i for i, c in enumerate(children) if c.raw == "("), None)
         if open_bracket is None:
+            # Kinds may be given without brackets, eg the 8 in "real*8"
+            args = [c for c in children if c.node.is_named and not c.is_type(Fortran.COMMENT)]
             return args, kwargs
 
         for child in children[open_bracket + 1 : -1]:
