@@ -1,5 +1,3 @@
-from typing import Optional
-
 from tree_sitter import Node
 
 from castep_linter.fortran.fortran_nodes.argument_types import ArgumentItem
@@ -42,7 +40,7 @@ class FortranCallExpression(FortranNode):
         except KeyError:
             return Identifier("")
 
-    def get_arg(self, keyword: Identifier, position: Optional[int] = None) -> ArgumentItem:
+    def get_arg(self, keyword: Identifier, position: int | None = None) -> ArgumentItem:
         """Get an argument from the call expression"""
         return self.args.get_arg(keyword, position)
 

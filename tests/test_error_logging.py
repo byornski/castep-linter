@@ -92,5 +92,5 @@ def test_fingerprints_unchanged_by_moving_lines(parse: Parser, tmp_path: pathlib
 def test_fingerprints_change_with_flagged_line(parse: Parser, tmp_path: pathlib.Path):
     before = codeclimate_fingerprints(parse, tmp_path, ROUTINE % b"")
     after = codeclimate_fingerprints(parse, tmp_path, (ROUTINE % b"").replace(b"b\n", b"c\n"))
-    changed = [desc for (desc, old), (_, new) in zip(before, after) if old != new]
+    changed = [desc for (desc, old), (_, new) in zip(before, after, strict=True) if old != new]
     assert changed == ["No kind specifier"]

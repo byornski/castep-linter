@@ -1,5 +1,3 @@
-from typing import Optional
-
 from tree_sitter import Node
 
 from castep_linter.fortran import node_factory
@@ -18,7 +16,7 @@ SKIP_ARGS_LIST = {"&", ",", ""}
 class FortranArgumentList(FortranNode):
     """Parser for fortran argument lists"""
 
-    def __init__(self, arg_list: Optional[Node]):
+    def __init__(self, arg_list: Node | None):
         if arg_list:
             super().__init__(arg_list)
 
@@ -27,7 +25,7 @@ class FortranArgumentList(FortranNode):
         else:
             self.args, self.kwargs = [], {}
 
-    def get_arg(self, keyword: Identifier, position: Optional[int] = None) -> ArgumentItem:
+    def get_arg(self, keyword: Identifier, position: int | None = None) -> ArgumentItem:
         """Return a value from a fortran argument list by keyword and optionally position"""
         if position and len(self.args) >= position:
             return PositionalArgument(self.args[position - 1])

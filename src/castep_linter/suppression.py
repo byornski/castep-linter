@@ -6,7 +6,6 @@ disables them for every line of that statement, including any lines joined by "&
 """
 
 import re
-from typing import Dict, List, Optional, Set, Tuple
 
 from castep_linter.error_logging.error_types import FortranMsgBase
 from castep_linter.error_logging.logger import ErrorLogger
@@ -19,22 +18,22 @@ MARKER = re.compile(r"castep-lint", re.IGNORECASE)
 # Name for problems with the comments themselves, which cannot be disabled
 DIRECTIVE_CHECK = "DIRECTIVE"
 
-Point = Tuple[int, ...]
+Point = tuple[int, ...]
 
 
 class Suppressions:
     """Checks disabled by comments in a single source file"""
 
-    def __init__(self, raw_text: bytes, valid_checks: Set[str]):
+    def __init__(self, raw_text: bytes, valid_checks: set[str]):
         self.lines = raw_text.split(b"\n")
         self.valid_checks = valid_checks
 
         # (start, end) of every routine, with the checks disabled in it
-        self.routines: Dict[Tuple[Point, Point], Set[str]] = {}
+        self.routines: dict[tuple[Point, Point], set[str]] = {}
         # Checks disabled by trailing comments, by row
-        self.line_disables: Dict[int, Set[str]] = {}
+        self.line_disables: dict[int, set[str]] = {}
         # Rows which end with a continuation "&"
-        self.continued_rows: Set[int] = set()
+        self.continued_rows: set[int] = set()
 
     def add_node(self, node: FortranNode, error_log: ErrorLogger) -> None:
         """Record anything relevant to disabling checks from a node of the source tree"""
@@ -90,7 +89,7 @@ class Suppressions:
         line = self.lines[row].strip()
         return bool(line) and not line.startswith((b"!", b"#"))
 
-    def _code_row(self, row: int, step: int) -> Optional[int]:
+    def _code_row(self, row: int, step: int) -> int | None:
         """Find the next row with code on it in the given direction, skipping comments"""
         row += step
         while 0 <= row < len(self.lines):
@@ -117,7 +116,7 @@ class Suppressions:
 
     def finalise(self) -> None:
         """Extend checks disabled by trailing comments to all rows of their statements"""
-        line_disables: Dict[int, Set[str]] = {}
+        line_disables: dict[int, set[str]] = {}
         for row, checks in self.line_disables.items():
             for statement_row in self._statement_rows(row):
                 line_disables.setdefault(statement_row, set()).update(checks)
@@ -135,7 +134,7 @@ class Suppressions:
             return False
 
         # Only the innermost routine applies, so contained routines do not inherit from their parent
-        containing: List[Tuple[Point, Set[str]]] = [
+        containing: list[tuple[Point, set[str]]] = [
             (start, checks)
             for (start, end), checks in self.routines.items()
             if start <= error.start_point < end
@@ -147,7 +146,7 @@ class Suppressions:
         return error.check in checks
 
 
-def _extent(node: FortranNode) -> Tuple[Point, Point]:
+def _extent(node: FortranNode) -> tuple[Point, Point]:
     return tuple(node.node.start_point), tuple(node.node.end_point)
 
 

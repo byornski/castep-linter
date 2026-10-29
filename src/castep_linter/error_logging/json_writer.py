@@ -133,7 +133,7 @@ def write_codeclimate(file: Path, error_logs: dict[str, ErrorLogger], error_leve
             location={"path": scanned_file, "lines": {"begin": error.start_point[0] + 1}},
         )
         for scanned_file, log in error_logs.items()
-        for error, fingerprint in zip(log.errors, fingerprints(scanned_file, log))
+        for error, fingerprint in zip(log.errors, fingerprints(scanned_file, log), strict=True)
         if error.ERROR_SEVERITY >= error_level
     ]
 

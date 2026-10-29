@@ -1,6 +1,6 @@
 """Module containing useful classes for parsing a fortran source tree from tree-sitter"""
 
-from typing import Callable, List, Optional, Tuple
+from collections.abc import Callable
 
 from rich.console import Console
 from tree_sitter import Node
@@ -17,7 +17,7 @@ class FortranNode:
     def __init__(self, node: Node):
         self.node = node
 
-        self.type: Optional[str]
+        self.type: str | None
 
         if self.node.is_named:
             self.type = self.node.type
@@ -37,11 +37,11 @@ class FortranNode:
         return self.ftype == ftype
 
     @property
-    def children(self) -> List["FortranNode"]:
+    def children(self) -> list["FortranNode"]:
         """Return all children of this node"""
         return [node_factory.wrap_node(c) for c in self.node.children]
 
-    def next_named_sibling(self) -> Optional["FortranNode"]:
+    def next_named_sibling(self) -> "FortranNode | None":
         """Return the next named sibling of the current node"""
         if self.node.next_named_sibling:
             return node_factory.wrap_node(self.node.next_named_sibling)
@@ -57,13 +57,13 @@ class FortranNode:
         err = f'"{ftype}" not found in children of node {self.raw}'
         raise KeyError(err)
 
-    def get_children_by_name(self, ftype: Fortran) -> List["FortranNode"]:
+    def get_children_by_name(self, ftype: Fortran) -> list["FortranNode"]:
         """Return all the children with the requested type"""
         return [
             node_factory.wrap_node(c) for c in self.node.named_children if c.type == ftype.value
         ]
 
-    def split(self) -> Tuple["FortranNode", "FortranNode"]:
+    def split(self) -> tuple["FortranNode", "FortranNode"]:
         """Split a relational node with a left and right part into the two child nodes"""
         left = self.node.child_by_field_name("left")
 
@@ -94,7 +94,7 @@ class FortranNode:
             raise WrongNodeError(err)
         return self.raw.strip("\"'")
 
-    def print_tree(self, printfn: Optional[Callable] = None, indent: int = 0):
+    def print_tree(self, printfn: Callable | None = None, indent: int = 0):
         """Prints a representation of the tree"""
         if not printfn:
             printfn = Console().print

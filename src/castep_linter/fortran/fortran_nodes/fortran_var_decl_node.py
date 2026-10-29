@@ -1,5 +1,3 @@
-from typing import Dict, Optional, Set
-
 from tree_sitter import Node
 
 from castep_linter.fortran.fortran_nodes.argument_types import ArgumentItem
@@ -21,7 +19,7 @@ class FortranVariableDeclaration(FortranNode):
         self.vars = self.parse_fort_var_names()
         self.args = self.parse_fort_var_size()
 
-    def get_arg(self, keyword: Identifier, position: Optional[int] = None) -> ArgumentItem:
+    def get_arg(self, keyword: Identifier, position: int | None = None) -> ArgumentItem:
         """Get an argument from the call expression"""
         return self.args.get_arg(keyword, position)
 
@@ -49,7 +47,7 @@ class FortranVariableDeclaration(FortranNode):
         except KeyError:
             return FType.OTHER
 
-    def parse_fort_type_qualifiers(self) -> Set[str]:
+    def parse_fort_type_qualifiers(self) -> set[str]:
         """Parse a variable declaration for qualifiers, eg parameter"""
         qualifiers = set()
         for type_qualifier in self.get_children_by_name(Fortran.TYPE_QUALIFIER):
@@ -70,9 +68,9 @@ class FortranVariableDeclaration(FortranNode):
 
         return fortran_size
 
-    def parse_fort_var_names(self) -> Dict[Identifier, Optional[str]]:
+    def parse_fort_var_names(self) -> dict[Identifier, str | None]:
         """Parse variable declaration statement for variables and optionally assignments"""
-        myvars: Dict[Identifier, Optional[str]] = {}
+        myvars: dict[Identifier, str | None] = {}
         for assignment in self.get_children_by_name(Fortran.INIT_DECLARATOR):
             lhs, rhs = assignment.split()
             #   lhs, rhs = split_relational_node(assignment)

@@ -1,7 +1,7 @@
 """Module to handle errors, warnings and info messages"""
 
 from enum import Enum, auto
-from typing import ClassVar, Dict, Literal, Optional
+from typing import ClassVar, Literal
 
 from castep_linter.fortran.fortran_nodes import FortranNode
 
@@ -23,7 +23,7 @@ class FortranMsgBase:
 
     def __init__(self, node: FortranNode, message: str) -> None:
         self.message = message
-        self.check: Optional[str] = None  # Name of the check which found this, eg "TRACE"
+        self.check: str | None = None  # Name of the check which found this, eg "TRACE"
         # Store as plain tuples: tree_sitter.Point does not survive pickling for multiprocessing
         self.start_point = tuple(node.node.start_point)
         self.end_point = tuple(node.node.end_point)
@@ -142,10 +142,10 @@ def new_fortran_error(level: str, node: FortranNode, message: str) -> FortranMsg
 
 ErrorNames = Literal["Error", "Warn", "Info"]
 
-FORTRAN_ERRORS: Dict[ErrorNames, type[FortranMsgBase]] = {
+FORTRAN_ERRORS: dict[ErrorNames, type[FortranMsgBase]] = {
     "Error": FortranError,
     "Warn": FortranWarning,
     "Info": FortranInfo,
 }
 
-ERROR_SEVERITY: Dict[str, int] = {k: v.ERROR_SEVERITY for k, v in FORTRAN_ERRORS.items()}
+ERROR_SEVERITY: dict[str, int] = {k: v.ERROR_SEVERITY for k, v in FORTRAN_ERRORS.items()}

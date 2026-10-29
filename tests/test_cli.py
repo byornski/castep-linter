@@ -12,7 +12,6 @@ import pathlib
 import signal
 import subprocess
 import sys
-from typing import List
 
 import pytest
 
@@ -37,7 +36,7 @@ end module foo
 """
 
 
-def run_linter(args: List[str], cwd: pathlib.Path) -> subprocess.CompletedProcess:
+def run_linter(args: list[str], cwd: pathlib.Path) -> subprocess.CompletedProcess:
     cmd = [sys.executable, "-c", "from castep_linter.scan_files import main; main()", *args]
     # Run in a new session so a hung linter can be killed along with its pool workers
     with subprocess.Popen(  # noqa: S603
@@ -58,7 +57,7 @@ def run_linter(args: List[str], cwd: pathlib.Path) -> subprocess.CompletedProces
 
 
 @pytest.fixture
-def source_files(tmp_path: pathlib.Path) -> List[pathlib.Path]:
+def source_files(tmp_path: pathlib.Path) -> list[pathlib.Path]:
     """Several files with errors so that results come back from more than one worker"""
     files = []
     for i in range(4):
@@ -69,7 +68,7 @@ def source_files(tmp_path: pathlib.Path) -> List[pathlib.Path]:
 
 
 @pytest.mark.parametrize("parallel", [1, 4])
-def test_cli_reports_errors(tmp_path: pathlib.Path, source_files: List[pathlib.Path], parallel):
+def test_cli_reports_errors(tmp_path: pathlib.Path, source_files: list[pathlib.Path], parallel):
     result = run_linter(["-p", str(parallel), *map(str, source_files)], tmp_path)
 
     assert result.returncode == 1, result.stderr
@@ -88,7 +87,7 @@ def test_cli_clean_file(tmp_path: pathlib.Path, parallel):
     assert f"0 issues in {file}" in result.stdout
 
 
-def test_cli_writes_reports(tmp_path: pathlib.Path, source_files: List[pathlib.Path]):
+def test_cli_writes_reports(tmp_path: pathlib.Path, source_files: list[pathlib.Path]):
     xml_file = tmp_path / "report.xml"
     json_file = tmp_path / "report.json"
     codeclimate_file = tmp_path / "codeclimate.json"
@@ -103,7 +102,7 @@ def test_cli_writes_reports(tmp_path: pathlib.Path, source_files: List[pathlib.P
 
 
 def test_cli_codeclimate_fingerprints_stable(
-    tmp_path: pathlib.Path, source_files: List[pathlib.Path]
+    tmp_path: pathlib.Path, source_files: list[pathlib.Path]
 ):
     # Each run is a new Python process, so this would catch use of the randomised hash()
     fingerprints = []

@@ -1,7 +1,6 @@
 # pylint: disable=W0621,C0116,C0114
 import json
 import pathlib
-from typing import List
 
 import pytest
 
@@ -16,7 +15,7 @@ TRACE = b"""
 """
 
 
-def messages(parse: Parser, code: bytes) -> List[str]:
+def messages(parse: Parser, code: bytes) -> list[str]:
     return [e.message for e in run_tests_on_code(parse(code), test_list, "filename").errors]
 
 

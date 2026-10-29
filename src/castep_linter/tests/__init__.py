@@ -1,6 +1,6 @@
 """Tests to be performed by the CASTEP Fortran linter"""
 
-from typing import Callable
+from collections.abc import Callable
 
 from castep_linter.error_logging.logger import ErrorLogger
 from castep_linter.fortran.fortran_nodes import FortranNode

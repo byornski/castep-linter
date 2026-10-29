@@ -1,7 +1,7 @@
 """Tests for Fortran code in CASTEP"""
 
 import pathlib
-from typing import Callable, Generator, Optional
+from collections.abc import Callable, Generator
 
 import tree_sitter_fortran
 from tree_sitter import Language, Parser
@@ -18,7 +18,7 @@ def get_fortran_parser() -> Parser:
 class FortranTree:
     """Parsed fortran source code tree"""
 
-    def __init__(self, raw_text: bytes, parser: Optional[Parser] = None):
+    def __init__(self, raw_text: bytes, parser: Parser | None = None):
         if parser is None:
             parser = get_fortran_parser()
 

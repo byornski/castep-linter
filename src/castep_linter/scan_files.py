@@ -139,7 +139,7 @@ def main() -> None:
 
     error_logs = {}
 
-    for file, error_log in zip(args.file, error_list):
+    for file, error_log in zip(args.file, error_list, strict=True):
         # Report any errors
         if not args.quiet:
             error_log.print_errors(CONSOLE, level=args.level, print_style=PrintStyle[args.format])
