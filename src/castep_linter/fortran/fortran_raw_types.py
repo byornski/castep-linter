@@ -9,6 +9,7 @@ class Fortran(Enum):
     SUBROUTINE_STMT = "subroutine_statement"
     FUNCTION = "function"
     FUNCTION_STMT = "function_statement"
+    INTERFACE = "interface"
     NAME = "name"
     SIZE = "size"
     KIND = "kind"

@@ -30,6 +30,11 @@ def check_trace_entry_exit(node: FortranNode, error_log: ErrorLogger) -> None:
         err = "Wrong node type passed"
         raise WrongNodeError(err)
 
+    # Routines declared in an interface block have no body to call trace from
+    parent = node.node.parent
+    if parent is not None and FortranNode(parent).is_type(Fortran.INTERFACE):
+        return
+
     has_trace_entry = False
     has_trace_exit = False
 

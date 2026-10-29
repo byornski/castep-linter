@@ -298,3 +298,24 @@ def test_trace_entry_exit_non_utf8_name(
     """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert [e.message for e in error_log.errors] == ["Incorrect name passed to trace in x"]
+
+
+@pytest.mark.parametrize("interface", [b"interface", b"abstract interface"])
+def test_trace_not_required_in_interface(parse: Parser, test_list: CheckFunctionDict, interface):
+    # Routines declared in an interface block have no body to call trace from
+    code = (
+        b"""module foo
+    """
+        + interface
+        + b"""
+      subroutine declared(a)
+        integer :: a
+      end subroutine declared
+      function declared_fn(a)
+        integer :: a, declared_fn
+      end function declared_fn
+    end interface
+    end module foo"""
+    )
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    assert len(error_log.errors) == 0
