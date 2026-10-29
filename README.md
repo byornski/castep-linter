@@ -2,6 +2,18 @@
 
 This is a code linter for the [CASTEP](http://www.castep.org) project to enforce certain style features.
 
+## Docker
+
+Each release is also published as a Docker image. To lint files in the current directory:
+
+```sh
+docker run --rm -v "$PWD:/src" ghcr.io/byornski/castep-linter file.f90
+```
+
+Add `--user "$(id -u):$(id -g)"` so that any reports written with `-x`, `-j` or `-c` are owned by you rather than root. To build the image from this repository instead, run `docker build -t castep-linter .`.
+
+Images up to version 0.8.0 were published on Docker Hub as `byornski/castep-linter`; later versions are only on the GitHub Container Registry.
+
 ## Disabling checks
 
 Checks can be switched off with a `castep-lint: disable=` comment, giving one or more check names separated by commas (case does not matter).
