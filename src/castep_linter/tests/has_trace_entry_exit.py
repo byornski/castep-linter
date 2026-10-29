@@ -1,12 +1,14 @@
 """Test that a subroutine or function has a trace_entry and trace_exit with the correct name"""
 
+from collections.abc import Iterator
+
 from castep_linter.error_logging import ErrorLogger
 from castep_linter.fortran.fortran_nodes import (
     FortranCallExpression,
     FortranNode,
     FortranVariableDeclaration,
 )
-from castep_linter.fortran.fortran_raw_types import Fortran, FType
+from castep_linter.fortran.fortran_raw_types import Fortran, FortranContexts, FType
 from castep_linter.fortran.identifier import Identifier
 from castep_linter.fortran.node_type_err import WrongNodeError
 from castep_linter.tests import castep_identifiers
@@ -19,6 +21,34 @@ def correct_trace_name(trace_name: str, subroutine_name: Identifier):
         return True
     else:
         return trace_name == subroutine_name
+
+
+def nested_calls(routine: FortranNode) -> Iterator[FortranCallExpression]:
+    """Subroutine calls inside blocks in a routine, eg if or do, but not in routines it contains"""
+    stack = [c for c in routine.children if not c.is_type(Fortran.SUBROUTINE_CALL)]
+    while stack:
+        node = stack.pop()
+        if node.ftype in FortranContexts or node.is_type(Fortran.INTERNAL_PROCEDURES):
+            continue
+        if isinstance(node, FortranCallExpression) and node.is_type(Fortran.SUBROUTINE_CALL):
+            yield node
+        else:
+            stack.extend(node.children)
+
+
+def trace_name(
+    routine: FortranCallExpression, const_string_vars: dict[Identifier, str]
+) -> str | None:
+    """The name passed to a trace call, if it is a string or a known character parameter"""
+    try:
+        trace_node = routine.get_arg(position=1, keyword=castep_identifiers.TRACE_STRING).value
+    except KeyError:
+        return None
+    if trace_node.is_type(Fortran.STRING_LITERAL):
+        return trace_node.parse_string_literal().lower()
+    if trace_node.is_type(Fortran.IDENTIFIER):
+        return const_string_vars.get(Identifier.from_node(trace_node))
+    return None
 
 
 def check_trace_entry_exit(node: FortranNode, error_log: ErrorLogger) -> None:
@@ -97,6 +127,16 @@ def check_trace_entry_exit(node: FortranNode, error_log: ErrorLogger) -> None:
         else:
             err = f"Unrecognised name passed to trace in {subroutine_name}"
             error_log.add_msg("Error", trace_node, err)
+
+    # Trace calls inside blocks count if they name this routine; others time a section of it
+    for routine in nested_calls(node):
+        name = trace_name(routine, const_string_vars)
+        if name is None or not correct_trace_name(name, subroutine_name):
+            continue
+        if routine.name == castep_identifiers.TRACE_ENTRY:
+            has_trace_entry = True
+        elif routine.name == castep_identifiers.TRACE_EXIT:
+            has_trace_exit = True
 
     if not has_trace_entry:
         error_log.add_msg("Info", node, f"Missing trace_entry in {subroutine_name}")

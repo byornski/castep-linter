@@ -10,6 +10,7 @@ class Fortran(Enum):
     FUNCTION = "function"
     FUNCTION_STMT = "function_statement"
     INTERFACE = "interface"
+    INTERNAL_PROCEDURES = "internal_procedures"
     NAME = "name"
     SIZE = "size"
     KIND = "kind"

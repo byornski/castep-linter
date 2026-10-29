@@ -319,3 +319,58 @@ def test_trace_not_required_in_interface(parse: Parser, test_list: CheckFunction
     )
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 0
+
+
+@pytest.mark.parametrize(
+    "exit_call",
+    [
+        b'if (y) then\ncall trace_exit("x", stat)\nreturn\nend if\n',
+        b'if (full_trace) call trace_exit("x", stat)\n',
+        b'do i = 1, 2\ncall trace_exit("x", stat)\nend do\n',
+        b'select case (y)\ncase (1)\ncall trace_exit("x", stat)\nend select\n',
+        b'#ifdef MPI\ncall trace_exit("x", stat)\n#endif\n',
+        b"if (y) then\ncall trace_exit(sub_name, stat)\nend if\n",
+    ],
+    ids=["block if", "one-line if", "do", "select case", "ifdef", "parameter"],
+)
+def test_trace_exit_inside_block(
+    parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict, exit_call
+):
+    code = subroutine_wrapper(
+        b'character(len=*), parameter :: sub_name = "x"\ncall trace_entry("x", stat)\n' + exit_call
+    )
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    assert [e.message for e in error_log.errors] == []
+
+
+def test_trace_section_timer_inside_block(
+    parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
+):
+    # Trace calls with another name inside a block time a section, so are neither
+    # checked nor counted as the routine's own
+    code = subroutine_wrapper(b"""
+    call trace_entry("x", stat)
+    if (y) then
+      call trace_entry("section", stat)
+      call trace_exit("section", stat)
+    end if
+    """)
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    assert [e.message for e in error_log.errors] == ["Missing trace_exit in x"]
+
+
+def test_trace_in_contained_routine_not_counted(parse: Parser, test_list: CheckFunctionDict):
+    code = b"""module foo
+    contains
+    subroutine x()
+    contains
+      subroutine inner()
+        call trace_entry("x", stat)
+        call trace_exit("x", stat)
+      end subroutine inner
+    end subroutine x
+    end module foo"""
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    messages = [e.message for e in error_log.errors]
+    assert "Missing trace_entry in x" in messages
+    assert "Missing trace_exit in x" in messages
