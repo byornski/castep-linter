@@ -86,7 +86,7 @@ def test_trace_exit_missing(
 ):
     code = subroutine_wrapper(b"""call trace_entry("x", stat)""")
     error_log = run_tests_on_code(parse(code), test_list, "filename")
-    assert len(error_log.errors) == 1
+    assert [e.message for e in error_log.errors] == ["Missing trace_exit at end of x"]
 
 
 def test_trace_entry_exit_missing(
@@ -322,22 +322,24 @@ def test_trace_not_required_in_interface(parse: Parser, test_list: CheckFunction
 
 
 @pytest.mark.parametrize(
-    "exit_call",
+    "entry_call",
     [
-        b'if (y) then\ncall trace_exit("x", stat)\nreturn\nend if\n',
-        b'if (full_trace) call trace_exit("x", stat)\n',
-        b'do i = 1, 2\ncall trace_exit("x", stat)\nend do\n',
-        b'select case (y)\ncase (1)\ncall trace_exit("x", stat)\nend select\n',
-        b'#ifdef MPI\ncall trace_exit("x", stat)\n#endif\n',
-        b"if (y) then\ncall trace_exit(sub_name, stat)\nend if\n",
+        b'if (y) then\ncall trace_entry("x", stat)\nend if\n',
+        b'if (full_trace) call trace_entry("x", stat)\n',
+        b'do i = 1, 2\ncall trace_entry("x", stat)\nend do\n',
+        b'select case (y)\ncase (1)\ncall trace_entry("x", stat)\nend select\n',
+        b'#ifdef MPI\ncall trace_entry("x", stat)\n#endif\n',
+        b"if (y) then\ncall trace_entry(sub_name, stat)\nend if\n",
     ],
     ids=["block if", "one-line if", "do", "select case", "ifdef", "parameter"],
 )
-def test_trace_exit_inside_block(
-    parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict, exit_call
+def test_trace_entry_inside_block(
+    parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict, entry_call
 ):
     code = subroutine_wrapper(
-        b'character(len=*), parameter :: sub_name = "x"\ncall trace_entry("x", stat)\n' + exit_call
+        b'character(len=*), parameter :: sub_name = "x"\n'
+        + entry_call
+        + b'call trace_exit("x", stat)'
     )
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert [e.message for e in error_log.errors] == []
@@ -356,7 +358,7 @@ def test_trace_section_timer_inside_block(
     end if
     """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
-    assert [e.message for e in error_log.errors] == ["Missing trace_exit in x"]
+    assert [e.message for e in error_log.errors] == ["Missing trace_exit at end of x"]
 
 
 def test_trace_in_contained_routine_not_counted(parse: Parser, test_list: CheckFunctionDict):
@@ -374,3 +376,123 @@ def test_trace_in_contained_routine_not_counted(parse: Parser, test_list: CheckF
     messages = [e.message for e in error_log.errors]
     assert "Missing trace_entry in x" in messages
     assert "Missing trace_exit in x" in messages
+
+
+def path_errors(parse: Parser, test_list: CheckFunctionDict, *lines: bytes) -> list:
+    """Errors for a subroutine x whose body is the given lines, which start on line 4"""
+    code = (
+        b"module foo\ncontains\nsubroutine x(y)\n"
+        + b"\n".join(lines)
+        + b"\nend subroutine x\nend module foo"
+    )
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    return [(type(e), e.message, e.start_point[0] + 1) for e in error_log.errors]
+
+
+ENTRY = b'call trace_entry("x", stat)'
+EXIT = b'call trace_exit("x", stat)'
+BEFORE_RETURN = "Missing trace_exit before return in x"
+AT_END = "Missing trace_exit at end of x"
+NOT_BEFORE_RETURN = "trace_exit is not immediately before return in x"
+NOT_AT_END = "trace_exit is not at the end of x"
+
+
+@pytest.mark.parametrize(
+    "lines",
+    [
+        (ENTRY, b"if (y) then", EXIT, b"return", b"end if", EXIT),
+        (ENTRY, b"if (y) then", b'call io_abort("failed")', b"return", b"end if", EXIT),
+        (b"if (y) return", ENTRY, EXIT),
+        (b"if (full_trace) " + ENTRY, b"if (full_trace) " + EXIT, b"return"),
+        (ENTRY, EXIT, b"! a comment", b"10 return", b"99 format(a)"),
+        (
+            ENTRY,
+            b"if (y) then",
+            EXIT,
+            b"else if (z) then",
+            b"stop",
+            b"else",
+            b'call io_abort("x")',
+            b"end if",
+        ),
+        (ENTRY, EXIT, b"return", b"10 continue", b"go to 20", b"20 continue"),
+        (ENTRY, b"if (y) then", EXIT, b"return", b"end if", b"call comms_abort()"),
+        (ENTRY, EXIT, b"return", b"99 format(a)", b"return"),
+        (ENTRY, b"if (y) then", b"z = 1", b"else", EXIT, b"return", b"end if", EXIT),
+    ],
+    ids=[
+        "early return",
+        "return after abort",
+        "return before trace_entry",
+        "conditional trace",
+        "labels and format",
+        "if else branches",
+        "go to",
+        "ends in abort",
+        "unreachable return",
+        "nested blocks",
+    ],
+)
+def test_trace_exit_on_every_path(parse: Parser, test_list: CheckFunctionDict, lines):
+    assert path_errors(parse, test_list, *lines) == []
+
+
+@pytest.mark.parametrize(
+    ("lines", "message", "line"),
+    [
+        ((ENTRY, b"if (y) then", b"y = 1", b"return", b"end if", EXIT), BEFORE_RETURN, 7),
+        ((ENTRY, b"if (y) return", EXIT), BEFORE_RETURN, 5),
+        (
+            (ENTRY, b"if (y) then", b'call trace_exit("other", stat)', b"return", b"end if", EXIT),
+            BEFORE_RETURN,
+            7,
+        ),
+        ((ENTRY, b"if (y) then", EXIT, b"end if"), AT_END, 5),
+        ((ENTRY, EXIT, b"if (y) call output()", b"return"), NOT_BEFORE_RETURN, 7),
+        ((ENTRY, b"if (y) then", EXIT, b"z = 1", b"return", b"end if", EXIT), NOT_BEFORE_RETURN, 8),
+        ((ENTRY, EXIT, b"y = 1"), NOT_AT_END, 6),
+        (
+            (ENTRY, b"if (y) go to 95", EXIT, b"return", b"95 continue", b"call other_abort()"),
+            AT_END,
+            9,
+        ),
+        ((ENTRY, EXIT, ENTRY), AT_END, 6),
+    ],
+    ids=[
+        "early return",
+        "one-line if return",
+        "trace_exit with other name",
+        "if without else",
+        "statement between trace_exit and return",
+        "statement between trace_exit and return in if",
+        "statement after trace_exit",
+        "only reached by go to",
+        "ends with trace_entry",
+    ],
+)
+def test_trace_exit_missing_on_path(
+    parse: Parser, test_list: CheckFunctionDict, lines, message, line
+):
+    assert (FortranError, message, line) in path_errors(parse, test_list, *lines)
+
+
+def test_return_paths_not_checked_without_trace_entry(parse: Parser, test_list: CheckFunctionDict):
+    messages = [m for _, m, _ in path_errors(parse, test_list, b"if (y) return", b"y = 1")]
+    assert messages == ["Missing trace_entry in x", "Missing trace_exit in x"]
+
+
+def test_return_in_contained_routine_checked_separately(
+    parse: Parser, test_list: CheckFunctionDict
+):
+    lines = (
+        ENTRY,
+        EXIT,
+        b"contains",
+        b"subroutine inner()",
+        b'call trace_entry("inner", stat)',
+        b"if (y) return",
+        b'call trace_exit("inner", stat)',
+        b"end subroutine inner",
+    )
+    messages = [m for _, m, _ in path_errors(parse, test_list, *lines)]
+    assert messages == ["Missing trace_exit before return in inner"]

@@ -76,51 +76,51 @@ def test_disable_does_not_affect_other_routines(parse: Parser):
 
 
 def test_disable_statement(parse: Parser, subroutine_wrapper: CodeWrapper):
-    code = subroutine_wrapper(TRACE + b"""
+    code = subroutine_wrapper(b"""
     z = 1.0  ! castep-lint: disable=literal_kind
     z = 1.0
-    """)
+    """ + TRACE)
     assert messages(parse, code) == ["Float literal without kind"]
 
 
 def test_disable_continued_statement_from_last_line(parse: Parser, subroutine_wrapper: CodeWrapper):
     # "No stat on allocate statement" is reported on the first line of the statement
-    code = subroutine_wrapper(TRACE + b"""
+    code = subroutine_wrapper(b"""
     allocate(p(n), &
        q(n))  ! castep-lint: disable=alloc
     allocate(r(n))
-    """)
+    """ + TRACE)
     assert messages(parse, code) == ["No stat on allocate statement"]
 
 
 def test_disable_continued_statement_from_first_line(
     parse: Parser, subroutine_wrapper: CodeWrapper
 ):
-    code = subroutine_wrapper(TRACE + b"""
+    code = subroutine_wrapper(b"""
     call g(a, &  ! castep-lint: disable=literal_kind
            1.0, &
 ! comment between continued lines
          & 2.0)
     z = 3.0
-    """)
+    """ + TRACE)
     assert messages(parse, code) == ["Float literal without kind"]
 
 
 def test_disable_statement_in_if_block(parse: Parser, subroutine_wrapper: CodeWrapper):
-    code = subroutine_wrapper(TRACE + b"""
+    code = subroutine_wrapper(b"""
     if (y) then
       z = 1.0  ! castep-lint: disable=literal_kind
       z = 2.0
     end if
-    """)
+    """ + TRACE)
     assert messages(parse, code) == ["Float literal without kind"]
 
 
 def test_ampersand_in_string_does_not_continue(parse: Parser, subroutine_wrapper: CodeWrapper):
-    code = subroutine_wrapper(TRACE + b"""
+    code = subroutine_wrapper(b"""
     call g("a&")  ! castep-lint: disable=literal_kind
     z = 1.0
-    """)
+    """ + TRACE)
     assert messages(parse, code) == ["Float literal without kind"]
 
 

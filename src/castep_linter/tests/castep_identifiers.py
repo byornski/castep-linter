@@ -37,6 +37,10 @@ IO_ALLOCATE_ABORT = Identifier("io_allocate_abort")
 
 IO_ABORT_ANY = {IO_ABORT, IO_ALLOCATE_ABORT}
 
+# Routines which stop the program, so never return to their caller
+COMMS_ABORT = Identifier("comms_abort")
+NEVER_RETURN = {*IO_ABORT_ANY, COMMS_ABORT}
+
 ARRAY = Identifier("---NONE---")
 
 

@@ -21,7 +21,7 @@ end subroutine comms_abort
 
 | Name | Check |
 |---|---|
-| `TRACE` | Subroutines and functions call `trace_entry` and `trace_exit` with their own name |
+| `TRACE` | Subroutines and functions call `trace_entry` and `trace_exit` with their own name, with `trace_exit` immediately before every `return` and as the last statement |
 | `ALLOC` | `allocate` statements have a `stat` which is checked straight afterwards |
 | `KIND` | `real` and `complex` declarations have a `kind=dp`, rather than a numeric kind or `double precision`/`double complex` |
 | `LITERAL_KIND` | Real literals have a `_dp` kind and integer literals a valid kind |
