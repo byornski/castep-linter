@@ -65,15 +65,11 @@ cov = [
 python = ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
 [tool.hatch.envs.lint]
-detached = true
+# Not detached, so the package and its dependencies are installed for mypy
 dependencies = [
   "black>=23.1.0",
   "mypy>=1.0.0",
   "ruff>=0.2.0",
-  "rich",
-  "tree-sitter==0.26.0",
-  "tree-sitter-fortran==0.6.0",
-  "junitparser",
   "pytest",
 ]
 [tool.hatch.envs.lint.scripts]
