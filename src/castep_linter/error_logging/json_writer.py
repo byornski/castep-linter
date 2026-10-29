@@ -1,9 +1,8 @@
-"""Module to write code linting errors in Jenkins json format"""
+"""Module to write code linting errors in Jenkins and CodeClimate json formats"""
 
 import hashlib
 import json
 from collections import Counter
-from enum import Enum, auto
 from pathlib import Path
 from typing import Literal, TypedDict
 
@@ -64,11 +63,6 @@ class CodeClimateIssue(TypedDict):
     fingerprint: str
     severity: CodeClimateSeverityLevel
     location: CodeClimateLocation
-
-
-class Formats(Enum):
-    Jenkins = auto()
-    CodeClimate = auto()
 
 
 def write_jenkins(file: Path, error_logs: dict[str, ErrorLogger], error_level: int):
@@ -139,19 +133,3 @@ def write_codeclimate(file: Path, error_logs: dict[str, ErrorLogger], error_leve
 
     with open(file, "w", encoding="utf-8") as out_file:
         json.dump(issues, out_file, indent=2)
-
-
-def write_json(
-    file: Path,
-    error_logs: dict[str, ErrorLogger],
-    error_level: int,
-    *,
-    out_format: Formats = Formats.Jenkins,
-):
-    if out_format is Formats.CodeClimate:
-        write_codeclimate(file, error_logs, error_level)
-    elif out_format is Formats.Jenkins:
-        write_jenkins(file, error_logs, error_level)
-    else:
-        msg = "Unrecognised out format."
-        raise KeyError(msg)
