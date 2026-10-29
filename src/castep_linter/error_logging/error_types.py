@@ -1,9 +1,12 @@
 """Module to handle errors, warnings and info messages"""
 
 from enum import Enum, auto
-from typing import ClassVar, Dict, Literal
+from typing import ClassVar, Literal
 
 from castep_linter.fortran.fortran_nodes import FortranNode
+
+# Name reported for anything not found by a named check
+UNKNOWN_CHECK = "UNKNOWN"
 
 
 class PrintStyle(Enum):
@@ -23,8 +26,10 @@ class FortranMsgBase:
 
     def __init__(self, node: FortranNode, message: str) -> None:
         self.message = message
-        self.start_point = node.node.start_point  # TODO FIX
-        self.end_point = node.node.end_point
+        self.check: str | None = None  # Name of the check which found this, eg "TRACE"
+        # Store as plain tuples: tree_sitter.Point does not survive pickling for multiprocessing
+        self.start_point = tuple(node.node.start_point)
+        self.end_point = tuple(node.node.end_point)
 
     def print_err(
         self, filename: str, console, *, print_style: PrintStyle = PrintStyle.ANNOTATED
@@ -45,7 +50,7 @@ class FortranMsgBase:
         start_line, _ = self.line_ranges
         start_char, _ = self.char_ranges
 
-        return f"{filename}:{start_line+1}:{start_char}: {self.ERROR_TYPE}: {self.message}"
+        return f"{filename}:{start_line+1}:{start_char+1}: {self.ERROR_TYPE}: {self.message}"
 
     def context(self, filename, *, underline=False):
         """Print a line of context for the current error"""
@@ -140,10 +145,10 @@ def new_fortran_error(level: str, node: FortranNode, message: str) -> FortranMsg
 
 ErrorNames = Literal["Error", "Warn", "Info"]
 
-FORTRAN_ERRORS: Dict[ErrorNames, type[FortranMsgBase]] = {
+FORTRAN_ERRORS: dict[ErrorNames, type[FortranMsgBase]] = {
     "Error": FortranError,
     "Warn": FortranWarning,
     "Info": FortranInfo,
 }
 
-ERROR_SEVERITY: Dict[str, int] = {k: v.ERROR_SEVERITY for k, v in FORTRAN_ERRORS.items()}
+ERROR_SEVERITY: dict[str, int] = {k: v.ERROR_SEVERITY for k, v in FORTRAN_ERRORS.items()}

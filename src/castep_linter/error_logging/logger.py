@@ -1,8 +1,8 @@
 """Module containing code for the high level error logger"""
 
 from collections import Counter
+from collections.abc import Iterator
 from dataclasses import dataclass, field
-from typing import Iterator, List
 
 from rich.console import Console
 
@@ -16,7 +16,7 @@ class ErrorLogger:
     a Fortran file"""
 
     filename: str
-    errors: List[error_types.FortranMsgBase] = field(default_factory=list)
+    errors: list[error_types.FortranMsgBase] = field(default_factory=list)
 
     def __iter__(self) -> Iterator[error_types.FortranMsgBase]:
         return iter(self.errors)

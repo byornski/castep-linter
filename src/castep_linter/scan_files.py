@@ -10,11 +10,13 @@ from multiprocessing import Pool
 from rich.console import Console
 
 from castep_linter import error_logging
+from castep_linter.error_logging.codeclimate_writer import write_codeclimate
 from castep_linter.error_logging.error_types import PrintStyle
-from castep_linter.error_logging.json_writer import write_codeclimate, write_jenkins
-from castep_linter.error_logging.xml_writer import write_xml
+from castep_linter.error_logging.jenkins_writer import write_jenkins
+from castep_linter.error_logging.junit_writer import write_junit
 from castep_linter.fortran import parser
-from castep_linter.tests import CheckFunction, test_list
+from castep_linter.suppression import Suppressions
+from castep_linter.tests import CHECK_NAMES, CheckFunction, test_list
 
 # done - complex(var) vs complex(var,dp) or complex(var, kind=dp)
 # done - allocate without stat and stat not checked. deallocate?
@@ -31,13 +33,23 @@ def run_tests_on_code(
 ) -> error_logging.ErrorLogger:
     """Run all available tests on the supplied source code"""
     error_log = error_logging.ErrorLogger(filename)
+    suppressions = Suppressions(fort_tree.raw_text, set(CHECK_NAMES.values()))
 
     for node in fort_tree.walk():
+        suppressions.add_node(node, error_log)
+
         # Have to check for is_named here as we want the statements,
         # not literal words like subroutine
         if node.type in test_dict:
             for test in test_dict[node.type]:
+                num_errors = len(error_log.errors)
                 test(node, error_log)
+                for error in error_log.errors[num_errors:]:
+                    error.check = CHECK_NAMES.get(test)
+
+    # Remove anything found by checks disabled with comments
+    suppressions.finalise()
+    error_log.errors = [e for e in error_log.errors if not suppressions.is_suppressed(e)]
 
     return error_log
 
@@ -76,7 +88,10 @@ def parse_args():
         "-j", "--json", type=pathlib.Path, help="File for Jenkins json output if required"
     )
     arg_parser.add_argument(
-        "-c", "--codeclimate", type=pathlib.Path, help="File for CodeClimate jason output if required"
+        "-c",
+        "--codeclimate",
+        type=pathlib.Path,
+        help="File for CodeClimate jason output if required",
     )
     arg_parser.add_argument(
         "-p", "--parallel", type=int, default=1, help="How many threads to use for scanning"
@@ -125,7 +140,7 @@ def main() -> None:
 
     error_logs = {}
 
-    for file, error_log in zip(args.file, error_list):
+    for file, error_log in zip(args.file, error_list, strict=True):
         # Report any errors
         if not args.quiet:
             error_log.print_errors(CONSOLE, level=args.level, print_style=PrintStyle[args.format])
@@ -140,7 +155,7 @@ def main() -> None:
 
     # Write junit xml file
     if args.xml:
-        write_xml(args.xml, error_logs, error_logging.ERROR_SEVERITY[args.level])
+        write_junit(args.xml, error_logs, error_logging.ERROR_SEVERITY[args.level])
     if args.json:
         write_jenkins(args.json, error_logs, error_logging.ERROR_SEVERITY[args.level])
     if args.codeclimate:

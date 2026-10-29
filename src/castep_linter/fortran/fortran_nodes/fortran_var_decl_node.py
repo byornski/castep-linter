@@ -1,5 +1,3 @@
-from typing import Dict, Optional, Set
-
 from tree_sitter import Node
 
 from castep_linter.fortran.fortran_nodes.argument_types import ArgumentItem
@@ -21,7 +19,7 @@ class FortranVariableDeclaration(FortranNode):
         self.vars = self.parse_fort_var_names()
         self.args = self.parse_fort_var_size()
 
-    def get_arg(self, keyword: Identifier, position: Optional[int] = None) -> ArgumentItem:
+    def get_arg(self, keyword: Identifier, position: int | None = None) -> ArgumentItem:
         """Get an argument from the call expression"""
         return self.args.get_arg(keyword, position)
 
@@ -32,15 +30,24 @@ class FortranVariableDeclaration(FortranNode):
     def parse_fort_type(self) -> FType:
         """Parse a variable declaration for type"""
         try:
-            fortran_type = self.get(Fortran.INTRINSIC_TYPE).raw.upper()
-            if fortran_type == "DOUBLE PRECISION":
-                return FType.DOUBLE
-            else:
-                return FType[fortran_type]
+            intrinsic_type = self.get(Fortran.INTRINSIC_TYPE)
         except KeyError:
             return FType.OTHER
 
-    def parse_fort_type_qualifiers(self) -> Set[str]:
+        # The kind specifier is part of the intrinsic type node, so only use the type keywords
+        # Double types may be written as one word or two, eg "doubleprecision" or "double precision"
+        type_words = [c.raw for c in intrinsic_type.children if not c.is_type(Fortran.KIND)]
+        fortran_type = "".join("".join(type_words).split()).upper()
+        if fortran_type == "DOUBLEPRECISION":
+            return FType.DOUBLE
+        if fortran_type == "DOUBLECOMPLEX":
+            return FType.DOUBLE_COMPLEX
+        try:
+            return FType[fortran_type]
+        except KeyError:
+            return FType.OTHER
+
+    def parse_fort_type_qualifiers(self) -> set[str]:
         """Parse a variable declaration for qualifiers, eg parameter"""
         qualifiers = set()
         for type_qualifier in self.get_children_by_name(Fortran.TYPE_QUALIFIER):
@@ -51,7 +58,7 @@ class FortranVariableDeclaration(FortranNode):
     def parse_fort_var_size(self) -> FortranArgumentList:
         """Parse a variable declaration for a size, eg kind=8"""
         try:
-            fortran_size = self.get(Fortran.SIZE).get(Fortran.ARGUMENT_LIST)
+            fortran_size = self.get(Fortran.INTRINSIC_TYPE).get(Fortran.KIND)
         except KeyError:
             return FortranArgumentList(None)
 
@@ -61,10 +68,10 @@ class FortranVariableDeclaration(FortranNode):
 
         return fortran_size
 
-    def parse_fort_var_names(self) -> Dict[Identifier, Optional[str]]:
+    def parse_fort_var_names(self) -> dict[Identifier, str | None]:
         """Parse variable declaration statement for variables and optionally assignments"""
-        myvars: Dict[Identifier, Optional[str]] = {}
-        for assignment in self.get_children_by_name(Fortran.ASSIGNMENT_STMT):
+        myvars: dict[Identifier, str | None] = {}
+        for assignment in self.get_children_by_name(Fortran.INIT_DECLARATOR):
             lhs, rhs = assignment.split()
             #   lhs, rhs = split_relational_node(assignment)
             varname = Identifier.from_node(lhs)

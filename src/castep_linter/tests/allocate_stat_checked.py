@@ -1,104 +1,64 @@
-"""Test that allocate stat is used and checked"""
-
-import logging
+"""Test that allocate stat is used and checked, and that a failure is reported correctly"""
 
 from castep_linter.error_logging import ErrorLogger
+from castep_linter.fortran import node_factory
 from castep_linter.fortran.fortran_nodes import (
     FortranCallExpression,
     FortranNode,
 )
 from castep_linter.fortran.fortran_raw_types import Fortran
 from castep_linter.fortran.identifier import Identifier
-from castep_linter.fortran.node_type_err import WrongNodeError
+from castep_linter.fortran.node_type_err import FortranContextError, WrongNodeError
 from castep_linter.tests import castep_identifiers
 
 
-def check_allocate_error_names(
-    node: FortranNode,
-    error_log: ErrorLogger,
-    variable_name: Identifier,
-    subroutine_name: Identifier,
-):
-    """Check that an allocation error is correctly handled"""
-    if not node.is_type(Fortran.IF_STMT):
-        err = f"Expected if statement but got {node.type}"
-        raise WrongNodeError(err)
+def normalised(name: str) -> Identifier:
+    """A variable name ignoring case and spaces, eg "obj % Arr" as "obj%arr" """
+    return Identifier("".join(name.split()))
 
-    sub_node = node.get(Fortran.SUBROUTINE_CALL)
-    if not isinstance(sub_node, FortranCallExpression):
+
+def allocate_statement(node: FortranNode) -> FortranCallExpression | None:
+    """The node as an allocate statement, or None if it is something else"""
+    if not isinstance(node, FortranCallExpression):
         err = f"Expected call expression but got {node.type}"
         raise WrongNodeError(err)
+    if node.name != castep_identifiers.ALLOCATE:
+        return None
+    return node
 
-    sub_call = sub_node
 
-    if sub_call.name not in castep_identifiers.IO_ABORT_ANY:
-        error_log.add_msg("Error", sub_node, "Allocation failure does not raise an error")
-        return
+def stat_checked_by(routine: FortranCallExpression) -> FortranNode | None:
+    """The if statement straight after an allocate which checks its stat, if there is one"""
+    try:
+        stat_variable = Identifier.from_node(routine.get_arg(keyword=castep_identifiers.STAT).value)
+    except KeyError:
+        return None
 
-    # Only do extra checking on io_allocate_abort -- ignore old io_abort style errors
-    if sub_call.name != castep_identifiers.IO_ALLOCATE_ABORT:
-        return
+    # Find the next non-comment line
+    next_node = routine.next_named_sibling()
+    while next_node and next_node.is_type(Fortran.COMMENT):
+        next_node = next_node.next_named_sibling()
 
-    error_array_node = sub_call.get_arg(position=1, keyword=castep_identifiers.IO_AA_ARRAY).value
-    error_routine_node = sub_call.get_arg(
-        position=2, keyword=castep_identifiers.IO_AA_ROUTINE
-    ).value
+    if not next_node or not next_node.is_type(Fortran.IF_STMT):
+        return None
 
     try:
-        error_array = Identifier(error_array_node.parse_string_literal())
-    except WrongNodeError:
-        logging.warning("Failed to properly parse array name from: %s", node.raw)
-        error_array = None
+        relational_expr = next_node.get(Fortran.PAREN_EXPRESSION).get(Fortran.RELATIONAL_EXPR)
+    except KeyError:
+        return None
 
-    try:
-        error_routine = Identifier(error_routine_node.parse_string_literal())
-    except WrongNodeError:
-        logging.warning("Failed to properly parse subroutine name from: %s", node.raw)
-        error_routine = None
-
-    if not error_array == variable_name:
-        err = f"Wrong array name used in io_allocate_abort. Expected: {variable_name}"
-        error_log.add_msg("Error", error_array_node, err)
-
-    if not error_routine == subroutine_name:
-        err = f"Wrong subroutine name used in io_allocate_abort. Expected: {subroutine_name}"
-        error_log.add_msg("Error", error_routine_node, err)
-
-
-def variable_name_from_allocate(routine: FortranCallExpression):
-    """Get the array from allocate statement"""
-    allocate_var_node = routine.get_arg(position=1, keyword=castep_identifiers.ARRAY).value
-
-    if routine.node.type == "call_expression":
-        try:
-            array_name_node = allocate_var_node.children[0]
-        except IndexError:
-            return ""
-    else:
-        array_name_node = allocate_var_node.get(Fortran.IDENTIFIER)
-
-    try:
-        return Identifier.from_node(array_name_node)
-    except KeyError as exc:
-        msg = "Could not identify variable name in allocate statement"
-        routine.print_tree()
-        raise ValueError(msg) from exc
+    lhs, rhs = relational_expr.split()
+    for side in (lhs, rhs):
+        if side.is_type(Fortran.IDENTIFIER) and Identifier.from_node(side) == stat_variable:
+            return next_node
+    return None
 
 
 def check_allocate_has_stat(node: FortranNode, error_log: ErrorLogger) -> None:
     """Test that allocate stat is used and checked"""
 
-    if not isinstance(node, FortranCallExpression):
-        err = f"Expected call expression but got {node.type}"
-        raise WrongNodeError(err)
-
-    routine = node
-
-    if routine.name is None:
-        return
-
-    # Check this is actually an allocate statement
-    if routine.name != castep_identifiers.ALLOCATE:
+    routine = allocate_statement(node)
+    if routine is None:
         return
 
     # First get the stat variable for this allocate statement
@@ -108,35 +68,97 @@ def check_allocate_has_stat(node: FortranNode, error_log: ErrorLogger) -> None:
         error_log.add_msg("Warning", node, "No stat on allocate statement")
         return
 
-    # allocate_var_identifier = variable_name_from_allocate(routine)
-
-    stat_variable = Identifier.from_node(stat_variable_node)
-
-    # Find the next non-comment line
-    next_node = node.next_named_sibling()
-    while next_node and next_node.is_type(Fortran.COMMENT):
-        next_node = next_node.next_named_sibling()
-
-    # Check if that uses the stat variable
-    stat_checked = False
-    if next_node and next_node.is_type(Fortran.IF_STMT):
-        try:
-            relational_expr = next_node.get(Fortran.PAREN_EXPRESSION).get(Fortran.RELATIONAL_EXPR)
-        except KeyError:
-            error_log.add_msg("Error", stat_variable_node, "Allocate status not checked")
-            return
-
-        lhs, rhs = relational_expr.split()
-
-        if lhs.is_type(Fortran.IDENTIFIER) and Identifier.from_node(lhs) == stat_variable:
-            stat_checked = True
-
-        if rhs.is_type(Fortran.IDENTIFIER) and Identifier.from_node(rhs) == stat_variable:
-            stat_checked = True
-
-    if not next_node or not stat_checked:
+    if stat_checked_by(routine) is None:
         error_log.add_msg("Error", stat_variable_node, "Allocate status not checked")
+
+
+def variable_names_from_allocate(routine: FortranCallExpression) -> list[Identifier]:
+    """Names of the variables allocated, eg "x" and "obj%y" in "allocate(x(n), obj%y(m))" """
+    args = routine.args.args
+    # In a typed allocation, eg "allocate(param_type :: obj%param)", the type comes before "::"
+    type_end = next((i for i, arg in enumerate(args) if arg.raw == "::"), None)
+    if type_end is not None:
+        args = args[type_end + 1 :]
+
+    names = []
+    for arg in args:
+        # A sized allocation is the variable followed by its size
+        variable = arg.children[0] if arg.is_type(Fortran.SIZED_ALLOCATION) else arg
+        if variable.is_type(Fortran.IDENTIFIER) or variable.is_type(Fortran.DERIVED_TYPE_MEMBER):
+            names.append(normalised(variable.raw))
+    return names
+
+
+def context_name(node: FortranNode) -> Identifier | None:
+    """Name of the subroutine, function or program containing a node, if any"""
+    try:
+        return node.get_context_identifier()
+    except FortranContextError:
+        pass
+
+    parent = node.node.parent
+    while parent is not None:
+        if parent.type == Fortran.PROGRAM.value:
+            program = node_factory.wrap_node(parent)
+            try:
+                return Identifier.from_node(program.get(Fortran.PROGRAM_STMT).get(Fortran.NAME))
+            except KeyError:
+                return None
+        parent = parent.parent
+    return None
+
+
+def check_allocate_abort(node: FortranNode, error_log: ErrorLogger) -> None:
+    """
+    Test that a failed allocate stops the program, and that io_allocate_abort is told the names
+    of the array and the routine
+    """
+
+    routine = allocate_statement(node)
+    if routine is None:
         return
 
-    # context_name = node.get_context_identifier()
-    # check_allocate_error_names(next_node, error_log, allocate_var_identifier, context_name)
+    # Allocates whose stat is not checked are reported by check_allocate_has_stat
+    if_node = stat_checked_by(routine)
+    if if_node is None:
+        return
+
+    calls = [
+        c
+        for c in if_node.get_children_by_name(Fortran.SUBROUTINE_CALL)
+        if isinstance(c, FortranCallExpression)
+    ]
+    stops = any(c.is_type(Fortran.STOP_STMT) for c in if_node.children)
+    if not stops and not any(c.name in castep_identifiers.NEVER_RETURN for c in calls):
+        error_log.add_msg("Error", if_node, "Allocation failure does not raise an error")
+        return
+
+    abort = next((c for c in calls if c.name == castep_identifiers.IO_ALLOCATE_ABORT), None)
+    if abort is None:
+        return
+
+    # Names given in variables rather than strings cannot be checked
+    try:
+        array_node = abort.get_arg(position=1, keyword=castep_identifiers.IO_AA_ARRAY).value
+    except KeyError:
+        array_node = None
+    if array_node is not None and array_node.is_type(Fortran.STRING_LITERAL):
+        variable_names = variable_names_from_allocate(routine)
+        if normalised(array_node.parse_string_literal()) not in variable_names:
+            expected = " or ".join(str(name) for name in variable_names)
+            err = f"Wrong array name used in io_allocate_abort. Expected: {expected}"
+            error_log.add_msg("Error", array_node, err)
+
+    subroutine_name = context_name(routine)
+    try:
+        routine_node = abort.get_arg(position=2, keyword=castep_identifiers.IO_AA_ROUTINE).value
+    except KeyError:
+        routine_node = None
+    if (
+        subroutine_name is not None
+        and routine_node is not None
+        and routine_node.is_type(Fortran.STRING_LITERAL)
+        and Identifier(routine_node.parse_string_literal()) != subroutine_name
+    ):
+        err = f"Wrong subroutine name used in io_allocate_abort. Expected: {subroutine_name}"
+        error_log.add_msg("Error", routine_node, err)

@@ -29,6 +29,18 @@ def test_complex_dp_correct_keyword(parse: Parser, test_list: CheckFunctionDict)
     assert len(error_log.errors) == 0
 
 
+def test_complex_dp_correct_keyword_continued(parse: Parser, test_list: CheckFunctionDict):
+    code = b"y = CMPLX(z, kind=&\n  dp)"
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    assert len(error_log.errors) == 0
+
+
+def test_complex_wrong_kind_keyword_continued(parse: Parser, test_list: CheckFunctionDict):
+    code = b"y = CMPLX(z, kind=&\n  sp)"
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    assert len(error_log.errors) == 1
+
+
 def test_complex_dp_wrong_place(parse: Parser, test_list: CheckFunctionDict):
     code = b"y = CMPLX(z, dp)"
     error_log = run_tests_on_code(parse(code), test_list, "filename")

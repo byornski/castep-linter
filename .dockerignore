@@ -1,0 +1,14 @@
+# Only the source is needed to build the package
+.git
+.github
+venv
+.venv
+**/__pycache__
+**/.mypy_cache
+**/.ruff_cache
+**/.pytest_cache
+htmlcov
+.coverage
+dist
+**/*~
+**/*.f90

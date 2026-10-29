@@ -12,7 +12,9 @@ def wrap_node(node: Node) -> "fortran_nodes.FortranNode":
         Fortran.FUNCTION: fortran_nodes.FortranFunctionNode,
         Fortran.SUBROUTINE_CALL: fortran_nodes.FortranCallExpression,
         Fortran.CALL_EXPRESSION: fortran_nodes.FortranCallExpression,
+        Fortran.ALLOCATE_STMT: fortran_nodes.FortranCallExpression,
         Fortran.ARGUMENT_LIST: fortran_nodes.FortranArgumentList,
+        Fortran.KIND: fortran_nodes.FortranArgumentList,
         Fortran.VARIABLE_DECLARATION: fortran_nodes.FortranVariableDeclaration,
     }
 

@@ -8,10 +8,10 @@ from castep_linter.fortran.fortran_nodes.fortran_subroutine_node import FortranS
 from castep_linter.fortran.fortran_nodes.fortran_var_decl_node import FortranVariableDeclaration
 
 __all__ = [
-    "FortranNode",
     "FortranArgumentList",
     "FortranCallExpression",
     "FortranFunctionNode",
+    "FortranNode",
     "FortranSubroutineNode",
     "FortranVariableDeclaration",
 ]

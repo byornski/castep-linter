@@ -3,6 +3,7 @@ from unittest import mock
 
 import pytest
 
+from castep_linter.error_logging.error_types import FortranWarning
 from castep_linter.fortran.node_type_err import WrongNodeError
 from castep_linter.scan_files import run_tests_on_code
 from castep_linter.tests import CheckFunctionDict, check_real_dp_declaration
@@ -45,6 +46,12 @@ def test_complex_integer_kind_without_keyword(parse: Parser, test_list: CheckFun
     assert len(error_log.errors) == 1
 
 
+def test_complex_star_kind(parse: Parser, test_list: CheckFunctionDict):
+    code = b"complex*16 :: y"
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    assert [e.message for e in error_log.errors] == ["Numeric kind specifier"]
+
+
 def test_complex_bad_var_kind_without_keyword(parse: Parser, test_list: CheckFunctionDict):
     code = b"complex(x) :: y"
     error_log = run_tests_on_code(parse(code), test_list, "filename")
@@ -55,3 +62,11 @@ def test_complex_bad_var_kind_with_keyword(parse: Parser, test_list: CheckFuncti
     code = b"complex(kind=x) :: y"
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 1
+
+
+@pytest.mark.parametrize("code", [b"double complex :: y", b"doublecomplex :: y"])
+def test_double_complex_declaration(parse: Parser, test_list: CheckFunctionDict, code):
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    assert [(type(e), e.message) for e in error_log.errors] == [
+        (FortranWarning, "double complex used instead of complex(kind=dp)")
+    ]
