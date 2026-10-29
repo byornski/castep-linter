@@ -84,7 +84,8 @@ class FortranNode:
         """Return a string of all the text in a node as unicode"""
         if self.node.text is None:
             return ""
-        return self.node.text.decode()
+        # Source may hold text in other encodings, eg names in Latin-1, so do not decode strictly
+        return self.node.text.decode(errors="replace")
 
     def parse_string_literal(self) -> str:
         "Parse a string literal object to get the string"

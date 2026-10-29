@@ -43,11 +43,9 @@ class Suppressions:
             self._add_continuation(node)
 
     def _add_comment(self, node: FortranNode, error_log: ErrorLogger) -> None:
-        # Comments may hold text in other encodings, eg names in Latin-1, so do not decode strictly
-        text = (node.node.text or b"").decode(errors="replace")
-        match = DIRECTIVE.fullmatch(text.strip())
+        match = DIRECTIVE.fullmatch(node.raw.strip())
         if not match:
-            if MARKER.search(text):
+            if MARKER.search(node.raw):
                 error_log.add_msg("Warning", node, "Malformed castep-lint comment")
             return
 

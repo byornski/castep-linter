@@ -248,3 +248,27 @@ def test_trace_entry_exit_missing_function(
     code = function_wrapper(b"")
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 2
+
+
+def test_trace_entry_exit_non_utf8_parameter(
+    parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
+):
+    # Some source files contain Latin-1 text, which must not stop the trace names being checked
+    code = subroutine_wrapper(b"""
+    character(len=*), parameter :: author = "M\xf6ller"
+    call trace_entry("x", stat)
+    call trace_exit("x", stat)
+    """)
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    assert len(error_log.errors) == 0
+
+
+def test_trace_entry_exit_non_utf8_name(
+    parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
+):
+    code = subroutine_wrapper(b"""
+    call trace_entry("x\xf6", stat)
+    call trace_exit("x", stat)
+    """)
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    assert [e.message for e in error_log.errors] == ["Incorrect name passed to trace in x"]
