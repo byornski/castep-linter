@@ -7,7 +7,7 @@ from junitparser import Error, JUnitXml, Skipped, TestCase, TestSuite  # type: i
 from castep_linter.error_logging.logger import ErrorLogger
 
 
-def write_xml(file: Path, error_logs: dict[str, ErrorLogger], error_level: int):
+def write_junit(file: Path, error_logs: dict[str, ErrorLogger], error_level: int):
     """write code linting errors in JUnit XML format"""
     xml = JUnitXml()
     for scanned_file, log in error_logs.items():

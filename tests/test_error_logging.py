@@ -6,8 +6,9 @@ import pickle
 
 from rich.console import Console
 
+from castep_linter.error_logging.codeclimate_writer import write_codeclimate
 from castep_linter.error_logging.error_types import PrintStyle
-from castep_linter.error_logging.json_writer import write_codeclimate, write_jenkins
+from castep_linter.error_logging.jenkins_writer import write_jenkins
 from castep_linter.scan_files import run_tests_on_code
 from castep_linter.tests import test_list
 from tests.conftest import CodeWrapper, Parser

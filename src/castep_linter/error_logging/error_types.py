@@ -5,6 +5,9 @@ from typing import ClassVar, Literal
 
 from castep_linter.fortran.fortran_nodes import FortranNode
 
+# Name reported for anything not found by a named check
+UNKNOWN_CHECK = "UNKNOWN"
+
 
 class PrintStyle(Enum):
     """Error print styles"""

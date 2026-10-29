@@ -10,9 +10,10 @@ from multiprocessing import Pool
 from rich.console import Console
 
 from castep_linter import error_logging
+from castep_linter.error_logging.codeclimate_writer import write_codeclimate
 from castep_linter.error_logging.error_types import PrintStyle
-from castep_linter.error_logging.json_writer import write_codeclimate, write_jenkins
-from castep_linter.error_logging.xml_writer import write_xml
+from castep_linter.error_logging.jenkins_writer import write_jenkins
+from castep_linter.error_logging.junit_writer import write_junit
 from castep_linter.fortran import parser
 from castep_linter.suppression import Suppressions
 from castep_linter.tests import CHECK_NAMES, CheckFunction, test_list
@@ -154,7 +155,7 @@ def main() -> None:
 
     # Write junit xml file
     if args.xml:
-        write_xml(args.xml, error_logs, error_logging.ERROR_SEVERITY[args.level])
+        write_junit(args.xml, error_logs, error_logging.ERROR_SEVERITY[args.level])
     if args.json:
         write_jenkins(args.json, error_logs, error_logging.ERROR_SEVERITY[args.level])
     if args.codeclimate:
