@@ -54,6 +54,25 @@ def test_allocate_stat_correct_if_but_not_checked(
     assert len(error_log.errors) == 1
 
 
+@pytest.mark.parametrize(
+    "condition", [b"u /= 0 .and. on_root", b"on_root .and. u /= 0", b"(u /= 0) .or. failed"]
+)
+def test_allocate_stat_compound_condition_not_allowed(
+    parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict, condition
+):
+    # The stat must be checked on its own, not as part of a larger condition
+    code = subroutine_wrapper(
+        b"""
+    allocate(stat_checked_var(x,y,z), stat=u)
+    if ("""
+        + condition
+        + b""") call io_abort("bleh")
+    """
+    )
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    assert [e.message for e in error_log.errors] == ["Allocate status not checked"]
+
+
 def test_allocate_stat_correct_mixed_caps(
     parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
 ):
