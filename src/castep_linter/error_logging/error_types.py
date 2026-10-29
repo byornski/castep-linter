@@ -1,7 +1,7 @@
 """Module to handle errors, warnings and info messages"""
 
 from enum import Enum, auto
-from typing import ClassVar, Dict, Literal
+from typing import ClassVar, Dict, Literal, Optional
 
 from castep_linter.fortran.fortran_nodes import FortranNode
 
@@ -23,6 +23,7 @@ class FortranMsgBase:
 
     def __init__(self, node: FortranNode, message: str) -> None:
         self.message = message
+        self.check: Optional[str] = None  # Name of the check which found this, eg "TRACE"
         # Store as plain tuples: tree_sitter.Point does not survive pickling for multiprocessing
         self.start_point = tuple(node.node.start_point)
         self.end_point = tuple(node.node.end_point)

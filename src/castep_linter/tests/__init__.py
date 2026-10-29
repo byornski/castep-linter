@@ -21,3 +21,12 @@ test_list: CheckFunctionDict = {
     "allocate_statement": [check_allocate_has_stat],
     "number_literal": [check_number_literal],
 }
+
+# Names used to refer to each check, eg in "! castep-lint: disable=TRACE" comments
+CHECK_NAMES: dict[CheckFunction, str] = {
+    check_trace_entry_exit: "TRACE",
+    check_allocate_has_stat: "ALLOC",
+    check_real_dp_declaration: "KIND",
+    check_number_literal: "LITERAL_KIND",
+    check_complex_has_dp: "CMPLX_KIND",
+}

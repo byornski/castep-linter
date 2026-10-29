@@ -98,7 +98,7 @@ def write_jenkins(file: Path, error_logs: dict[str, ErrorLogger], error_level: i
 def write_codeclimate(file: Path, error_logs: dict[str, ErrorLogger], error_level: int) -> None:
     issues: list[CodeClimateIssue] = [
         CodeClimateIssue(
-            check_name=determine_type(error.message),
+            check_name=error.check or determine_type(error.message),
             description=error.message,
             fingerprint=str(abs(hash(scanned_file + error.message))),
             severity=CodeClimate_severity_dict[error.ERROR_SEVERITY],

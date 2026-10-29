@@ -14,7 +14,8 @@ from castep_linter.error_logging.error_types import PrintStyle
 from castep_linter.error_logging.json_writer import write_codeclimate, write_jenkins
 from castep_linter.error_logging.xml_writer import write_xml
 from castep_linter.fortran import parser
-from castep_linter.tests import CheckFunction, test_list
+from castep_linter.suppression import Suppressions
+from castep_linter.tests import CHECK_NAMES, CheckFunction, test_list
 
 # done - complex(var) vs complex(var,dp) or complex(var, kind=dp)
 # done - allocate without stat and stat not checked. deallocate?
@@ -31,13 +32,23 @@ def run_tests_on_code(
 ) -> error_logging.ErrorLogger:
     """Run all available tests on the supplied source code"""
     error_log = error_logging.ErrorLogger(filename)
+    suppressions = Suppressions(fort_tree.raw_text, set(CHECK_NAMES.values()))
 
     for node in fort_tree.walk():
+        suppressions.add_node(node, error_log)
+
         # Have to check for is_named here as we want the statements,
         # not literal words like subroutine
         if node.type in test_dict:
             for test in test_dict[node.type]:
+                num_errors = len(error_log.errors)
                 test(node, error_log)
+                for error in error_log.errors[num_errors:]:
+                    error.check = CHECK_NAMES.get(test)
+
+    # Remove anything found by checks disabled with comments
+    suppressions.finalise()
+    error_log.errors = [e for e in error_log.errors if not suppressions.is_suppressed(e)]
 
     return error_log
 
