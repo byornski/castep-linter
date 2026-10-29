@@ -47,7 +47,7 @@ class FortranMsgBase:
         start_line, _ = self.line_ranges
         start_char, _ = self.char_ranges
 
-        return f"{filename}:{start_line+1}:{start_char}: {self.ERROR_TYPE}: {self.message}"
+        return f"{filename}:{start_line+1}:{start_char+1}: {self.ERROR_TYPE}: {self.message}"
 
     def context(self, filename, *, underline=False):
         """Print a line of context for the current error"""
