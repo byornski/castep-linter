@@ -1,5 +1,9 @@
-# This workflow will upload a Python Package using Twine when a release is created
+# This workflow will build a Python Package and upload it to PyPI when a release is created
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python#publishing-to-package-registries
+
+# It uses PyPI trusted publishing, so needs no API token: PyPI accepts the upload because it comes
+# from this workflow, in the pypi environment, which must be registered as a trusted publisher at
+# https://pypi.org/manage/project/castep-linter/settings/publishing/
 
 # This workflow uses actions that are not certified by GitHub.
 # They are provided by a third-party and are governed by
@@ -16,7 +20,7 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  build:
 
     runs-on: ubuntu-latest
 
@@ -32,8 +36,29 @@ jobs:
         pip install hatch
     - name: Build package
       run: hatch build
+    - name: Store the package for publishing
+      uses: actions/upload-artifact@v7
+      with:
+        name: dist
+        path: dist/
+
+  publish:
+
+    # Publish separately from building, so only this job can prove its identity to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/castep-linter
+    permissions:
+      # Lets the job request the token PyPI uses to check where the upload comes from
+      id-token: write
+
+    steps:
+    - name: Fetch the package
+      uses: actions/download-artifact@v8
+      with:
+        name: dist
+        path: dist/
     - name: Publish package
       uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086  # v1.14.3
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
