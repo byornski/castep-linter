@@ -10,6 +10,8 @@ class Fortran(Enum):
     FUNCTION = "function"
     FUNCTION_STMT = "function_statement"
     INTERFACE = "interface"
+    PROGRAM = "program"
+    PROGRAM_STMT = "program_statement"
     INTERNAL_PROCEDURES = "internal_procedures"
     NAME = "name"
     SIZE = "size"
@@ -39,6 +41,8 @@ class Fortran(Enum):
     TYPE_QUALIFIER = "type_qualifier"
     CALL_EXPRESSION = "call_expression"
     ALLOCATE_STMT = "allocate_statement"
+    SIZED_ALLOCATION = "sized_allocation"
+    DERIVED_TYPE_MEMBER = "derived_type_member_expression"
 
     UNKNOWN = "unknown"
 

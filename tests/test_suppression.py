@@ -130,7 +130,7 @@ def test_unknown_check_name(parse: Parser, subroutine_wrapper: CodeWrapper):
     assert messages(parse, code) == [
         (
             "Unknown check 'bogus' in castep-lint comment, "
-            "expected one of ALLOC, CMPLX_KIND, KIND, LITERAL_KIND, TRACE"
+            "expected one of ALLOC, ALLOC_ABORT, CMPLX_KIND, KIND, LITERAL_KIND, TRACE"
         )
     ]
 
@@ -253,7 +253,7 @@ def test_directive_warnings_cannot_be_disabled(parse: Parser, subroutine_wrapper
     assert messages(parse, code) == [
         (
             "Unknown check 'directive' in castep-lint comment, "
-            "expected one of ALLOC, CMPLX_KIND, KIND, LITERAL_KIND, TRACE"
+            "expected one of ALLOC, ALLOC_ABORT, CMPLX_KIND, KIND, LITERAL_KIND, TRACE"
         )
     ]
 

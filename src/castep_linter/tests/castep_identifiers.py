@@ -41,8 +41,6 @@ IO_ABORT_ANY = {IO_ABORT, IO_ALLOCATE_ABORT}
 COMMS_ABORT = Identifier("comms_abort")
 NEVER_RETURN = {*IO_ABORT_ANY, COMMS_ABORT}
 
-ARRAY = Identifier("---NONE---")
-
 
 IO_AA_ARRAY = Identifier("array_name")
 IO_AA_ROUTINE = Identifier("routine_name")

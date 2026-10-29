@@ -5,13 +5,20 @@ import pytest
 
 from castep_linter.fortran.node_type_err import WrongNodeError
 from castep_linter.scan_files import run_tests_on_code
-from castep_linter.tests import CheckFunctionDict, check_allocate_has_stat
+from castep_linter.tests import (
+    CheckFunction,
+    CheckFunctionDict,
+    check_allocate_abort,
+    check_allocate_has_stat,
+)
 from tests.conftest import CodeWrapper, Parser
+
+ALLOCATE_CHECKS: list[CheckFunction] = [check_allocate_has_stat, check_allocate_abort]
 
 
 @pytest.fixture
 def test_list() -> CheckFunctionDict:
-    return {"allocate_statement": [check_allocate_has_stat]}
+    return {"allocate_statement": ALLOCATE_CHECKS}
 
 
 def test_wrong_node():
@@ -138,7 +145,6 @@ def test_allocate_stat_not_checked_with_line_after(
     assert len(error_log.errors) == 1
 
 
-@pytest.mark.skip()
 def test_allocate_stat_wrong_function_called(
     parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
 ):
@@ -161,7 +167,6 @@ def test_allocate_abort_correct(
     assert len(error_log.errors) == 0
 
 
-@pytest.mark.skip()
 def test_allocate_abort_wrong_var_name(
     parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
 ):
@@ -173,7 +178,6 @@ def test_allocate_abort_wrong_var_name(
     assert len(error_log.errors) == 1
 
 
-@pytest.mark.skip()
 def test_allocate_abort_wrong_sub_name(
     parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
 ):
@@ -185,7 +189,6 @@ def test_allocate_abort_wrong_sub_name(
     assert len(error_log.errors) == 1
 
 
-@pytest.mark.skip()
 def test_allocate_abort_wrong_var_and_sub(
     parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
 ):
@@ -195,3 +198,126 @@ def test_allocate_abort_wrong_var_and_sub(
     """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 2
+
+
+def abort_messages(parse: Parser, code: bytes) -> list[str]:
+    error_log = run_tests_on_code(parse(code), {"allocate_statement": [check_allocate_abort]}, "f")
+    return [e.message for e in error_log.errors]
+
+
+@pytest.mark.parametrize(
+    "handler",
+    [
+        b'if (u/=0) call io_abort("failed")',
+        b"if (u/=0) call comms_abort()",
+        b'if (u/=0) then\nwrite(*,*) "failed"\ncall comms_abort()\nend if',
+        b'if (u/=0) call io_allocate_abort("arr", "x")',
+        b"if (u/=0) stop",
+        b'if (u/=0) then\nwrite(*,*) "failed"\nerror stop 1\nend if',
+    ],
+    ids=["io_abort", "comms_abort", "block if", "io_allocate_abort", "stop", "error stop"],
+)
+def test_allocate_failure_stops_program(parse: Parser, subroutine_wrapper: CodeWrapper, handler):
+    code = subroutine_wrapper(b"allocate(arr(n), stat=u)\n" + handler)
+    assert abort_messages(parse, code) == []
+
+
+@pytest.mark.parametrize(
+    "handler",
+    [b'if (u/=0) call trace_log_error("failed", u)', b"if (u/=0) then\nstatus = u\nreturn\nend if"],
+    ids=["other routine", "return status"],
+)
+def test_allocate_failure_not_reported(parse: Parser, subroutine_wrapper: CodeWrapper, handler):
+    code = subroutine_wrapper(b"allocate(arr(n), stat=u)\n" + handler)
+    assert abort_messages(parse, code) == ["Allocation failure does not raise an error"]
+
+
+@pytest.mark.parametrize(
+    ("allocate", "array", "errors"),
+    [
+        (b"allocate(a(n), b(n), stat=u)", b"b", []),
+        (b"allocate(obj%arr(n), stat=u)", b"obj%arr", []),
+        (b"allocate(obj%arr(n), stat=u)", b"OBJ % Arr", []),
+        (
+            b"allocate(obj%arr(n), stat=u)",
+            b"arr",
+            ["Wrong array name used in io_allocate_abort. Expected: obj%arr"],
+        ),
+        (
+            b"allocate(a(n), b(n), stat=u)",
+            b"c",
+            ["Wrong array name used in io_allocate_abort. Expected: a or b"],
+        ),
+        (b"allocate(param_type :: obj%param, stat=u)", b"obj%param", []),
+        (
+            b"allocate(param_type :: obj%param, stat=u)",
+            b"param_type",
+            ["Wrong array name used in io_allocate_abort. Expected: obj%param"],
+        ),
+    ],
+    ids=[
+        "second of two",
+        "component",
+        "case and spaces",
+        "component only",
+        "neither of two",
+        "typed",
+        "type name",
+    ],
+)
+def test_allocate_abort_array_name(
+    parse: Parser, subroutine_wrapper: CodeWrapper, allocate, array, errors
+):
+    code = subroutine_wrapper(
+        allocate + b'\nif (u/=0) call io_allocate_abort("' + array + b'", "x")'
+    )
+    assert abort_messages(parse, code) == errors
+
+
+def test_allocate_abort_names_in_variables_not_checked(
+    parse: Parser, subroutine_wrapper: CodeWrapper
+):
+    code = subroutine_wrapper(b"""
+    allocate(arr(n), stat=u)
+    if (u/=0) call io_allocate_abort(array_name, routine_name)
+    """)
+    assert abort_messages(parse, code) == []
+
+
+@pytest.mark.parametrize(
+    ("routine", "errors"),
+    [
+        (b"tool", []),
+        (b"x", ["Wrong subroutine name used in io_allocate_abort. Expected: tool"]),
+    ],
+)
+def test_allocate_abort_in_program(parse: Parser, routine, errors):
+    code = (
+        b"""program tool
+    allocate(arr(n), stat=u)
+    if (u/=0) call io_allocate_abort("arr", \""""
+        + routine
+        + b"""\")
+    end program tool"""
+    )
+    assert abort_messages(parse, code) == errors
+
+
+@pytest.mark.parametrize(
+    ("disabled", "remaining"),
+    [
+        ("alloc_abort", ["Allocate status not checked"]),
+        ("alloc", ["Wrong subroutine name used in io_allocate_abort. Expected: x"]),
+    ],
+)
+def test_allocate_checks_disabled_separately(
+    parse: Parser, subroutine_wrapper: CodeWrapper, disabled, remaining
+):
+    code = subroutine_wrapper(f"""
+    ! castep-lint: disable={disabled}
+    allocate(a(n), stat=u)
+    if (u/=0) call io_allocate_abort("a", "wrong")
+    allocate(b(n), stat=v)
+    """.encode())
+    error_log = run_tests_on_code(parse(code), {"allocate_statement": ALLOCATE_CHECKS}, "f")
+    assert [e.message for e in error_log.errors] == remaining

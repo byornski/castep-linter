@@ -23,6 +23,7 @@ end subroutine comms_abort
 |---|---|
 | `TRACE` | Subroutines and functions call `trace_entry` and `trace_exit` with their own name, with `trace_exit` immediately before every `return` and as the last statement |
 | `ALLOC` | `allocate` statements have a `stat` which is checked straight afterwards |
+| `ALLOC_ABORT` | A failed `allocate` stops the program, eg with `io_allocate_abort`, `io_abort`, `comms_abort` or `stop`, and `io_allocate_abort` is given the exact names of the array and the routine |
 | `KIND` | `real` and `complex` declarations have a `kind=dp`, rather than a numeric kind or `double precision`/`double complex` |
 | `LITERAL_KIND` | Real literals have a `_dp` kind and integer literals a valid kind |
 | `CMPLX_KIND` | `cmplx(...)` is given a `kind=dp` |
