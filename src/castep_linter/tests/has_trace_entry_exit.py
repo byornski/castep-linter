@@ -63,7 +63,7 @@ def check_trace_entry_exit(node: FortranNode, error_log: ErrorLogger) -> None:
         try:
             trace_node = routine.get_arg(position=1, keyword=castep_identifiers.TRACE_STRING).value
         except KeyError:
-            err = f"Unparsable name passed to trace in {subroutine_name}"
+            err = f"No name passed to trace in {subroutine_name}"
             error_log.add_msg("Error", routine, err)
             continue
 

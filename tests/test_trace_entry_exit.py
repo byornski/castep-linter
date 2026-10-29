@@ -162,7 +162,33 @@ def test_trace_entry_exit_no_name(
     call trace_exit()
     """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
-    assert len(error_log.errors) == 2
+    assert [e.message for e in error_log.errors] == ["No name passed to trace in x"] * 2
+
+
+@pytest.mark.parametrize(
+    "calls",
+    [
+        b"call trace_entry\ncall trace_exit\n",
+        b"call trace_entry(status=stat)\ncall trace_exit(status=stat)\n",
+    ],
+)
+def test_trace_entry_exit_no_name_other_forms(
+    parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict, calls
+):
+    error_log = run_tests_on_code(parse(subroutine_wrapper(calls)), test_list, "filename")
+    assert [e.message for e in error_log.errors] == ["No name passed to trace in x"] * 2
+
+
+def test_trace_entry_exit_call_without_brackets(
+    parse: Parser, subroutine_wrapper: CodeWrapper, test_list: CheckFunctionDict
+):
+    code = subroutine_wrapper(b"""
+    call trace_entry("x", stat)
+    call flush
+    call trace_exit("x", stat)
+    """)
+    error_log = run_tests_on_code(parse(code), test_list, "filename")
+    assert len(error_log.errors) == 0
 
 
 def test_trace_entry_exit_unknown_name(
