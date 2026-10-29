@@ -2,6 +2,7 @@ from typing import Optional
 
 from tree_sitter import Node
 
+from castep_linter.fortran import node_factory
 from castep_linter.fortran.fortran_nodes.argument_types import (
     ArgumentItem,
     KeywordArgument,
@@ -65,8 +66,14 @@ class FortranArgumentList(FortranNode):
             if parsing_arg_list:
                 args.append(child)
             elif child.is_type(Fortran.KEYWORD_ARGUMENT):
-                key, _, value = child.children
-                kwargs[Identifier.from_node(key)] = value
+                # Look up by field as line continuations can add extra children, eg "kind=&"
+                key = child.node.child_by_field_name("name")
+                value = child.node.child_by_field_name("value")
+                if key is None or value is None:
+                    err = f"Unable to parse keyword argument: {child.raw}"
+                    raise ValueError(err)
+                keyword = Identifier.from_node(node_factory.wrap_node(key))
+                kwargs[keyword] = node_factory.wrap_node(value)
             else:
                 err = f"Unknown argument list item in keyword arguments: {child.type}: \n{child.raw}\nin\n{self.raw}"
                 raise ValueError(err)
