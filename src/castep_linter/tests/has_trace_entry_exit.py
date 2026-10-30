@@ -7,9 +7,9 @@ from castep_linter.fortran import node_factory
 from castep_linter.fortran.fortran_nodes import (
     FortranCallExpression,
     FortranNode,
-    FortranVariableDeclaration,
+    string_constants,
 )
-from castep_linter.fortran.fortran_raw_types import Fortran, FortranContexts, FType
+from castep_linter.fortran.fortran_raw_types import Fortran, FortranContexts
 from castep_linter.fortran.identifier import Identifier
 from castep_linter.fortran.node_type_err import WrongNodeError
 from castep_linter.tests import castep_identifiers
@@ -264,19 +264,7 @@ def check_trace_entry_exit(node: FortranNode, error_log: ErrorLogger) -> None:
     has_trace_entry = False
     has_trace_exit = False
 
-    const_string_vars: dict[Identifier, str] = {}
-
-    for var_node in node.get_children_by_name(Fortran.VARIABLE_DECLARATION):
-        if not isinstance(var_node, FortranVariableDeclaration):
-            err = f"Expected variable declaration but got {node.type}"
-            raise WrongNodeError(err)
-
-        var_decl = var_node
-
-        if var_decl.var_type != FType.CHARACTER:
-            continue
-
-        const_string_vars.update(var_decl.get_initialized_vars())
+    const_string_vars = string_constants(node)
 
     for routine in node.get_children_by_name(Fortran.SUBROUTINE_CALL):
         if not isinstance(routine, FortranCallExpression):

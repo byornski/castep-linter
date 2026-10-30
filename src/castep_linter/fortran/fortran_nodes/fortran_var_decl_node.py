@@ -80,3 +80,18 @@ class FortranVariableDeclaration(FortranNode):
             else:
                 myvars[varname] = None
         return myvars
+
+
+def string_constants(routine: FortranNode) -> dict[Identifier, str]:
+    """
+    Values of the character variables given a value where a routine declares them, eg
+    "character(len=*), parameter :: subroutine_name = 'x'"
+    """
+    constants: dict[Identifier, str] = {}
+    for declaration in routine.get_children_by_name(Fortran.VARIABLE_DECLARATION):
+        if (
+            isinstance(declaration, FortranVariableDeclaration)
+            and declaration.var_type == FType.CHARACTER
+        ):
+            constants.update(declaration.get_initialized_vars())
+    return constants

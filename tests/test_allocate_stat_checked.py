@@ -321,3 +321,82 @@ def test_allocate_checks_disabled_separately(
     """.encode())
     error_log = run_tests_on_code(parse(code), {"allocate_statement": ALLOCATE_CHECKS}, "f")
     assert [e.message for e in error_log.errors] == remaining
+
+
+def by_variable(kind: str, variable: str, value: str, expected: str) -> str:
+    return (
+        f"Wrong {kind} name used in io_allocate_abort "
+        f'by variable {variable}="{value}". Expected: {expected}'
+    )
+
+
+@pytest.mark.parametrize(
+    ("declaration", "abort", "errors"),
+    [
+        (b"character(len=*), parameter :: subname = 'x'", b"'arr', subname", []),
+        (
+            b"character(len=*), parameter :: subname = 'wrong'",
+            b"'arr', subname",
+            [by_variable("subroutine", "subname", "wrong", "x")],
+        ),
+        (
+            b"character(len=30) :: routinename = 'wrong'",
+            b"'arr', routinename",
+            [by_variable("subroutine", "routinename", "wrong", "x")],
+        ),
+        (b"character(len=*), parameter :: arr_name = 'arr'", b"arr_name, 'x'", []),
+        (
+            b"character(len=*), parameter :: arr_name = 'other'",
+            b"arr_name, 'x'",
+            [by_variable("array", "arr_name", "other", "arr")],
+        ),
+        (b"character(len=30) :: subname", b"'arr', subname", []),
+    ],
+    ids=[
+        "parameter",
+        "wrong parameter",
+        "wrong initialised variable",
+        "array parameter",
+        "wrong array parameter",
+        "variable without a value",
+    ],
+)
+def test_allocate_abort_names_in_variables(
+    parse: Parser, subroutine_wrapper: CodeWrapper, declaration, abort, errors
+):
+    code = subroutine_wrapper(
+        declaration
+        + b"\nallocate(arr(n), stat=u)\nif (u/=0) call io_allocate_abort("
+        + abort
+        + b")"
+    )
+    assert abort_messages(parse, code) == errors
+
+
+def test_allocate_abort_name_in_dummy_argument_not_checked(parse: Parser):
+    code = b"""module foo
+    contains
+    subroutine x(subname)
+    character(len=*), intent(in) :: subname
+    allocate(arr(n), stat=u)
+    if (u/=0) call io_allocate_abort("arr", subname)
+    end subroutine x
+    end module foo"""
+    assert abort_messages(parse, code) == []
+
+
+@pytest.mark.parametrize(
+    ("value", "errors"),
+    [(b"tool", []), (b"x", [by_variable("subroutine", "progname", "x", "tool")])],
+)
+def test_allocate_abort_name_in_program_parameter(parse: Parser, value, errors):
+    code = (
+        b"""program tool
+    character(len=*), parameter :: progname = '"""
+        + value
+        + b"""'
+    allocate(arr(n), stat=u)
+    if (u/=0) call io_allocate_abort("arr", progname)
+    end program tool"""
+    )
+    assert abort_messages(parse, code) == errors

@@ -59,7 +59,7 @@ Every `allocate` has a `stat=` variable, and the next statement is an `if` which
 
 ### `ALLOC_ABORT`: allocate failures are reported
 
-When an `allocate`'s status is checked, the `if` stops the program, with `io_allocate_abort`, `io_abort`, `comms_abort` or `stop`. `io_allocate_abort` is given exactly the name of the array allocated, eg `'obj%arr'`, and of the routine or program it is in. Names passed in variables are not checked.
+When an `allocate`'s status is checked, the `if` stops the program, with `io_allocate_abort`, `io_abort`, `comms_abort` or `stop`. `io_allocate_abort` is given exactly the name of the array allocated, eg `'obj%arr'`, and of the routine or program it is in. The names may also be given in `character` variables declared with a value in the routine, eg `character(len=*), parameter :: subroutine_name = 'x'`. Names in other variables, such as arguments, are not checked.
 
 ```fortran
 allocate(obj%arr(n), stat=ierr)
@@ -71,6 +71,8 @@ if (ierr /= 0) call io_allocate_abort('obj%arr', 'x')
 | Allocation failure does not raise an error | Error |
 | Wrong array name used in io_allocate_abort. Expected: … | Error |
 | Wrong subroutine name used in io_allocate_abort. Expected: … | Error |
+| Wrong array name used in io_allocate_abort by variable v="…". Expected: … | Error |
+| Wrong subroutine name used in io_allocate_abort by variable v="…". Expected: … | Error |
 
 ### `KIND`: reals and complexes are double precision
 

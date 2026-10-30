@@ -5,7 +5,10 @@ from castep_linter.fortran.fortran_nodes.fortran_call_expression_node import For
 from castep_linter.fortran.fortran_nodes.fortran_function_node import FortranFunctionNode
 from castep_linter.fortran.fortran_nodes.fortran_node import FortranNode
 from castep_linter.fortran.fortran_nodes.fortran_subroutine_node import FortranSubroutineNode
-from castep_linter.fortran.fortran_nodes.fortran_var_decl_node import FortranVariableDeclaration
+from castep_linter.fortran.fortran_nodes.fortran_var_decl_node import (
+    FortranVariableDeclaration,
+    string_constants,
+)
 
 __all__ = [
     "FortranArgumentList",
@@ -14,4 +17,5 @@ __all__ = [
     "FortranNode",
     "FortranSubroutineNode",
     "FortranVariableDeclaration",
+    "string_constants",
 ]

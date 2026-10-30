@@ -5,10 +5,11 @@ from castep_linter.fortran import node_factory
 from castep_linter.fortran.fortran_nodes import (
     FortranCallExpression,
     FortranNode,
+    string_constants,
 )
-from castep_linter.fortran.fortran_raw_types import Fortran
+from castep_linter.fortran.fortran_raw_types import Fortran, FortranContexts
 from castep_linter.fortran.identifier import Identifier
-from castep_linter.fortran.node_type_err import FortranContextError, WrongNodeError
+from castep_linter.fortran.node_type_err import WrongNodeError
 from castep_linter.tests import castep_identifiers
 
 
@@ -89,23 +90,50 @@ def variable_names_from_allocate(routine: FortranCallExpression) -> list[Identif
     return names
 
 
-def context_name(node: FortranNode) -> Identifier | None:
-    """Name of the subroutine, function or program containing a node, if any"""
-    try:
-        return node.get_context_identifier()
-    except FortranContextError:
-        pass
-
+def enclosing_routine(node: FortranNode) -> FortranNode | None:
+    """The subroutine, function or program containing a node, if any"""
     parent = node.node.parent
     while parent is not None:
-        if parent.type == Fortran.PROGRAM.value:
-            program = node_factory.wrap_node(parent)
-            try:
-                return Identifier.from_node(program.get(Fortran.PROGRAM_STMT).get(Fortran.NAME))
-            except KeyError:
-                return None
+        routine = node_factory.wrap_node(parent)
+        if routine.ftype in FortranContexts or routine.is_type(Fortran.PROGRAM):
+            return routine
         parent = parent.parent
     return None
+
+
+def routine_name(routine: FortranNode) -> Identifier | None:
+    """Name of a subroutine, function or program"""
+    if routine.is_type(Fortran.PROGRAM):
+        try:
+            return Identifier.from_node(routine.get(Fortran.PROGRAM_STMT).get(Fortran.NAME))
+        except KeyError:
+            return None
+    return routine.get_context_identifier()
+
+
+def name_given(
+    arg: FortranNode | None, constants: dict[Identifier, str]
+) -> tuple[str, Identifier | None] | None:
+    """
+    A name passed as a string, or in a character variable with a known value, with the variable
+    it is in. Names which are not known until the program runs, eg in arguments, are None.
+    """
+    if arg is None:
+        return None
+    if arg.is_type(Fortran.STRING_LITERAL):
+        return arg.parse_string_literal(), None
+    if arg.is_type(Fortran.IDENTIFIER):
+        variable = Identifier.from_node(arg)
+        if variable in constants:
+            return constants[variable], variable
+    return None
+
+
+def wrong_name(kind: str, given: tuple[str, Identifier | None], expected: str) -> str:
+    """Message for a wrong name given to io_allocate_abort, saying which variable it was in"""
+    value, variable = given
+    by_variable = f' by variable {variable}="{value}"' if variable is not None else ""
+    return f"Wrong {kind} name used in io_allocate_abort{by_variable}. Expected: {expected}"
 
 
 def check_allocate_abort(node: FortranNode, error_log: ErrorLogger) -> None:
@@ -114,12 +142,12 @@ def check_allocate_abort(node: FortranNode, error_log: ErrorLogger) -> None:
     of the array and the routine
     """
 
-    routine = allocate_statement(node)
-    if routine is None:
+    allocate = allocate_statement(node)
+    if allocate is None:
         return
 
     # Allocates whose stat is not checked are reported by check_allocate_has_stat
-    if_node = stat_checked_by(routine)
+    if_node = stat_checked_by(allocate)
     if if_node is None:
         return
 
@@ -137,28 +165,32 @@ def check_allocate_abort(node: FortranNode, error_log: ErrorLogger) -> None:
     if abort is None:
         return
 
-    # Names given in variables rather than strings cannot be checked
+    routine = enclosing_routine(allocate)
+    constants = string_constants(routine) if routine is not None else {}
+
     try:
         array_node = abort.get_arg(position=1, keyword=castep_identifiers.IO_AA_ARRAY).value
     except KeyError:
         array_node = None
-    if array_node is not None and array_node.is_type(Fortran.STRING_LITERAL):
-        variable_names = variable_names_from_allocate(routine)
-        if normalised(array_node.parse_string_literal()) not in variable_names:
+    given = name_given(array_node, constants)
+    if array_node is not None and given is not None:
+        variable_names = variable_names_from_allocate(allocate)
+        if normalised(given[0]) not in variable_names:
             expected = " or ".join(str(name) for name in variable_names)
-            err = f"Wrong array name used in io_allocate_abort. Expected: {expected}"
-            error_log.add_msg("Error", array_node, err)
+            error_log.add_msg("Error", array_node, wrong_name("array", given, expected))
 
-    subroutine_name = context_name(routine)
+    subroutine_name = routine_name(routine) if routine is not None else None
     try:
         routine_node = abort.get_arg(position=2, keyword=castep_identifiers.IO_AA_ROUTINE).value
     except KeyError:
         routine_node = None
+    given = name_given(routine_node, constants)
     if (
         subroutine_name is not None
         and routine_node is not None
-        and routine_node.is_type(Fortran.STRING_LITERAL)
-        and Identifier(routine_node.parse_string_literal()) != subroutine_name
+        and given is not None
+        and Identifier(given[0]) != subroutine_name
     ):
-        err = f"Wrong subroutine name used in io_allocate_abort. Expected: {subroutine_name}"
-        error_log.add_msg("Error", routine_node, err)
+        error_log.add_msg(
+            "Error", routine_node, wrong_name("subroutine", given, str(subroutine_name))
+        )
