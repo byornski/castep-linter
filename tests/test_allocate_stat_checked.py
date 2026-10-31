@@ -209,13 +209,18 @@ def abort_messages(parse: Parser, code: bytes) -> list[str]:
     "handler",
     [
         b'if (u/=0) call io_abort("failed")',
-        b"if (u/=0) call comms_abort()",
-        b'if (u/=0) then\nwrite(*,*) "failed"\ncall comms_abort()\nend if',
         b'if (u/=0) call io_allocate_abort("arr", "x")',
-        b"if (u/=0) stop",
-        b'if (u/=0) then\nwrite(*,*) "failed"\nerror stop 1\nend if',
+        b'if (u/=0) call err_abort("failed")',
+        b'if (u/=0) then\nwrite(*,*) "failed"\ncall err_abort("failed")\nend if',
+        b'if (u/=0) call err_assert(.false., "failed")',
     ],
-    ids=["io_abort", "comms_abort", "block if", "io_allocate_abort", "stop", "error stop"],
+    ids=[
+        "io_abort",
+        "io_allocate_abort",
+        "err_abort",
+        "err_abort in block if",
+        "err_assert",
+    ],
 )
 def test_allocate_failure_stops_program(parse: Parser, subroutine_wrapper: CodeWrapper, handler):
     code = subroutine_wrapper(b"allocate(arr(n), stat=u)\n" + handler)
@@ -224,8 +229,22 @@ def test_allocate_failure_stops_program(parse: Parser, subroutine_wrapper: CodeW
 
 @pytest.mark.parametrize(
     "handler",
-    [b'if (u/=0) call trace_log_error("failed", u)', b"if (u/=0) then\nstatus = u\nreturn\nend if"],
-    ids=["other routine", "return status"],
+    [
+        b'if (u/=0) call trace_log_error("failed", u)',
+        b'if (u/=0) call memory_allocate_abort("arr", 8, "failed")',
+        b"if (u/=0) call comms_abort()",
+        b"if (u/=0) then\nstatus = u\nreturn\nend if",
+        b"if (u/=0) stop",
+        b'if (u/=0) then\nwrite(*,*) "failed"\nerror stop 1\nend if',
+    ],
+    ids=[
+        "other routine",
+        "other abort routine",
+        "comms_abort",
+        "return status",
+        "stop",
+        "error stop",
+    ],
 )
 def test_allocate_failure_not_reported(parse: Parser, subroutine_wrapper: CodeWrapper, handler):
     code = subroutine_wrapper(b"allocate(arr(n), stat=u)\n" + handler)
@@ -400,3 +419,10 @@ def test_allocate_abort_name_in_program_parameter(parse: Parser, value, errors):
     end program tool"""
     )
     assert abort_messages(parse, code) == errors
+
+
+def test_allocate_err_assert_does_not_check_stat(parse: Parser, subroutine_wrapper: CodeWrapper):
+    # err_assert only counts inside an if which checks the stat, like other error routines
+    code = subroutine_wrapper(b'allocate(arr(n), stat=u)\ncall err_assert(u == 0, "failed")')
+    error_log = run_tests_on_code(parse(code), {"allocate_statement": ALLOCATE_CHECKS}, "f")
+    assert [e.message for e in error_log.errors] == ["Allocate status not checked"]

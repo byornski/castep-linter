@@ -20,7 +20,7 @@ Each problem found is an error, a warning or info. `castep-lint` exits with a fa
 
 ### `TRACE`: routines are traced
 
-Every subroutine and function calls `trace_entry` and `trace_exit`, passing its own name, either as a string or as a `character` parameter. The name `castep` is also accepted. `trace_exit` must be the statement immediately before every `return` after `trace_entry`, and the last statement of the routine. It is not needed after `io_abort`, `io_allocate_abort`, `comms_abort`, `stop` or `go to`, and at the end of the routine an `if` block with an `else` is accepted if each branch ends this way. Routines declared in an `interface` block are not checked.
+Every subroutine and function calls `trace_entry` and `trace_exit`, passing its own name, either as a string or as a `character` parameter. The name `castep` is also accepted. `trace_exit` must be the statement immediately before every `return` after `trace_entry`, and the last statement of the routine. It is not needed after `io_abort`, `io_allocate_abort`, `err_abort`, `stop` or `go to`, and at the end of the routine an `if` block with an `else` is accepted if each branch ends this way. Routines declared in an `interface` block are not checked.
 
 ```fortran
 subroutine x()
@@ -59,7 +59,7 @@ Every `allocate` has a `stat=` variable, and the next statement is an `if` which
 
 ### `ALLOC_ABORT`: allocate failures are reported
 
-When an `allocate`'s status is checked, the `if` stops the program, with `io_allocate_abort`, `io_abort`, `comms_abort` or `stop`. `io_allocate_abort` is given exactly the name of the array allocated, eg `'obj%arr'`, and of the routine or program it is in. The names may also be given in `character` variables declared with a value in the routine, eg `character(len=*), parameter :: subroutine_name = 'x'`. Names in other variables, such as arguments, are not checked.
+When an `allocate`'s status is checked, the `if` reports the failure with one of the error routines: `io_allocate_abort`, `io_abort`, `err_abort` or `err_assert`. Other routines, including `comms_abort`, and `stop` are reported. `io_allocate_abort` is given exactly the name of the array allocated, eg `'obj%arr'`, and of the routine or program it is in. The names may also be given in `character` variables declared with a value in the routine, eg `character(len=*), parameter :: subroutine_name = 'x'`. Names in other variables, such as arguments, are not checked.
 
 ```fortran
 allocate(obj%arr(n), stat=ierr)

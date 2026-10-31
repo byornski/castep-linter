@@ -416,7 +416,8 @@ NOT_AT_END = "trace_exit is not at the end of x"
             b"end if",
         ),
         (ENTRY, EXIT, b"return", b"10 continue", b"go to 20", b"20 continue"),
-        (ENTRY, b"if (y) then", EXIT, b"return", b"end if", b"call comms_abort()"),
+        (ENTRY, b"if (y) then", EXIT, b"return", b"end if", b'call io_abort("failed")'),
+        (ENTRY, b"if (y) then", b'call err_abort("failed")', b"return", b"end if", EXIT),
         (ENTRY, EXIT, b"return", b"99 format(a)", b"return"),
         (ENTRY, b"if (y) then", b"z = 1", b"else", EXIT, b"return", b"end if", EXIT),
     ],
@@ -429,6 +430,7 @@ NOT_AT_END = "trace_exit is not at the end of x"
         "if else branches",
         "go to",
         "ends in abort",
+        "return after err_abort",
         "unreachable return",
         "nested blocks",
     ],
@@ -442,6 +444,16 @@ def test_trace_exit_on_every_path(parse: Parser, test_list: CheckFunctionDict, l
     [
         ((ENTRY, b"if (y) then", b"y = 1", b"return", b"end if", EXIT), BEFORE_RETURN, 7),
         ((ENTRY, b"if (y) return", EXIT), BEFORE_RETURN, 5),
+        (
+            (ENTRY, b"if (y) then", b'call err_assert(z, "failed")', b"return", b"end if", EXIT),
+            BEFORE_RETURN,
+            7,
+        ),
+        (
+            (ENTRY, b"if (y) then", b"call comms_abort()", b"return", b"end if", EXIT),
+            BEFORE_RETURN,
+            7,
+        ),
         (
             (ENTRY, b"if (y) then", b'call trace_exit("other", stat)', b"return", b"end if", EXIT),
             BEFORE_RETURN,
@@ -461,6 +473,8 @@ def test_trace_exit_on_every_path(parse: Parser, test_list: CheckFunctionDict, l
     ids=[
         "early return",
         "one-line if return",
+        "return after err_assert",
+        "return after comms_abort",
         "trace_exit with other name",
         "if without else",
         "statement between trace_exit and return",

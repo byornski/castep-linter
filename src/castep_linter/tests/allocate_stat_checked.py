@@ -138,8 +138,8 @@ def wrong_name(kind: str, given: tuple[str, Identifier | None], expected: str) -
 
 def check_allocate_abort(node: FortranNode, error_log: ErrorLogger) -> None:
     """
-    Test that a failed allocate stops the program, and that io_allocate_abort is told the names
-    of the array and the routine
+    Test that a failed allocate is reported with one of the error routines, and that
+    io_allocate_abort is told the names of the array and the routine
     """
 
     allocate = allocate_statement(node)
@@ -156,8 +156,7 @@ def check_allocate_abort(node: FortranNode, error_log: ErrorLogger) -> None:
         for c in if_node.get_children_by_name(Fortran.SUBROUTINE_CALL)
         if isinstance(c, FortranCallExpression)
     ]
-    stops = any(c.is_type(Fortran.STOP_STMT) for c in if_node.children)
-    if not stops and not any(c.name in castep_identifiers.NEVER_RETURN for c in calls):
+    if not any(c.name in castep_identifiers.ERROR_ROUTINES for c in calls):
         error_log.add_msg("Error", if_node, "Allocation failure does not raise an error")
         return
 
