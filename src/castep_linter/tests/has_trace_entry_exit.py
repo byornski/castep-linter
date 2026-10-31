@@ -179,7 +179,7 @@ def check_return_paths(
         return False
 
     def ends_properly(statement: FortranNode | None) -> bool:
-        """Whether a statement ends a way out of the routine, eg trace_exit or io_abort"""
+        """Whether a statement ends a way out of the routine, eg trace_exit or err_abort"""
         if statement is None:
             return False
         if is_own_trace(statement, castep_identifiers.TRACE_EXIT) or never_returns(statement):

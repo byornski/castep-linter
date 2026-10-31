@@ -32,15 +32,14 @@ STAT = Identifier("stat")
 KIND = Identifier("kind")
 ALLOCATE = Identifier("allocate")
 
-IO_ABORT = Identifier("io_abort")
-IO_ALLOCATE_ABORT = Identifier("io_allocate_abort")
-
-IO_ABORT_ANY = {IO_ABORT, IO_ALLOCATE_ABORT}
-
-# Routines which stop the program, so never return to their caller. comms_abort also does, but
-# should no longer be called, so is not included
+# Routines which stop the program, so never return to their caller. io_abort, io_allocate_abort
+# and comms_abort also do, but should no longer be called, so are not included
 ERR_ABORT = Identifier("err_abort")
-NEVER_RETURN = {*IO_ABORT_ANY, ERR_ABORT}
+ERR_ALLOCATE_ABORT = Identifier("err_allocate_abort")
+NEVER_RETURN = {ERR_ABORT, ERR_ALLOCATE_ABORT}
+
+# Routines given the names of the array and the routine when an allocate fails
+ALLOCATE_ABORTS = {ERR_ALLOCATE_ABORT}
 
 # The only routines accepted for reporting a failed allocate. err_assert stops the program only
 # when its condition is false, so does not count as never returning
@@ -48,5 +47,5 @@ ERR_ASSERT = Identifier("err_assert")
 ERROR_ROUTINES = {*NEVER_RETURN, ERR_ASSERT}
 
 
-IO_AA_ARRAY = Identifier("array_name")
-IO_AA_ROUTINE = Identifier("routine_name")
+ALLOCATE_ABORT_ARRAY = Identifier("array_name")
+ALLOCATE_ABORT_ROUTINE = Identifier("routine_name")

@@ -129,17 +129,19 @@ def name_given(
     return None
 
 
-def wrong_name(kind: str, given: tuple[str, Identifier | None], expected: str) -> str:
-    """Message for a wrong name given to io_allocate_abort, saying which variable it was in"""
+def wrong_name(
+    kind: str, abort: Identifier, given: tuple[str, Identifier | None], expected: str
+) -> str:
+    """Message for a wrong name given to eg err_allocate_abort, saying which variable it was in"""
     value, variable = given
     by_variable = f' by variable {variable}="{value}"' if variable is not None else ""
-    return f"Wrong {kind} name used in io_allocate_abort{by_variable}. Expected: {expected}"
+    return f"Wrong {kind} name used in {abort}{by_variable}. Expected: {expected}"
 
 
 def check_allocate_abort(node: FortranNode, error_log: ErrorLogger) -> None:
     """
     Test that a failed allocate is reported with one of the error routines, and that
-    io_allocate_abort is told the names of the array and the routine
+    err_allocate_abort is told the names of the array and the routine
     """
 
     allocate = allocate_statement(node)
@@ -160,7 +162,7 @@ def check_allocate_abort(node: FortranNode, error_log: ErrorLogger) -> None:
         error_log.add_msg("Error", if_node, "Allocation failure does not raise an error")
         return
 
-    abort = next((c for c in calls if c.name == castep_identifiers.IO_ALLOCATE_ABORT), None)
+    abort = next((c for c in calls if c.name in castep_identifiers.ALLOCATE_ABORTS), None)
     if abort is None:
         return
 
@@ -168,7 +170,9 @@ def check_allocate_abort(node: FortranNode, error_log: ErrorLogger) -> None:
     constants = string_constants(routine) if routine is not None else {}
 
     try:
-        array_node = abort.get_arg(position=1, keyword=castep_identifiers.IO_AA_ARRAY).value
+        array_node = abort.get_arg(
+            position=1, keyword=castep_identifiers.ALLOCATE_ABORT_ARRAY
+        ).value
     except KeyError:
         array_node = None
     given = name_given(array_node, constants)
@@ -176,11 +180,13 @@ def check_allocate_abort(node: FortranNode, error_log: ErrorLogger) -> None:
         variable_names = variable_names_from_allocate(allocate)
         if normalised(given[0]) not in variable_names:
             expected = " or ".join(str(name) for name in variable_names)
-            error_log.add_msg("Error", array_node, wrong_name("array", given, expected))
+            error_log.add_msg("Error", array_node, wrong_name("array", abort.name, given, expected))
 
     subroutine_name = routine_name(routine) if routine is not None else None
     try:
-        routine_node = abort.get_arg(position=2, keyword=castep_identifiers.IO_AA_ROUTINE).value
+        routine_node = abort.get_arg(
+            position=2, keyword=castep_identifiers.ALLOCATE_ABORT_ROUTINE
+        ).value
     except KeyError:
         routine_node = None
     given = name_given(routine_node, constants)
@@ -191,5 +197,5 @@ def check_allocate_abort(node: FortranNode, error_log: ErrorLogger) -> None:
         and Identifier(given[0]) != subroutine_name
     ):
         error_log.add_msg(
-            "Error", routine_node, wrong_name("subroutine", given, str(subroutine_name))
+            "Error", routine_node, wrong_name("subroutine", abort.name, given, str(subroutine_name))
         )

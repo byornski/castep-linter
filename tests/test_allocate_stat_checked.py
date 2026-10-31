@@ -33,7 +33,7 @@ def test_allocate_stat_correct(
 ):
     code = subroutine_wrapper(b"""
     allocate(stat_checked_var(x,y,z), stat=u)
-    if (u/=0) call io_abort("bleh")
+    if (u/=0) call err_abort("bleh")
     """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 0
@@ -44,7 +44,7 @@ def test_allocate_stat_correct_wrong_way(
 ):
     code = subroutine_wrapper(b"""
     allocate(stat_checked_var(x,y,z), stat=u)
-    if (0/=u) call io_abort("bleh")
+    if (0/=u) call err_abort("bleh")
     """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 0
@@ -55,7 +55,7 @@ def test_allocate_stat_correct_if_but_not_checked(
 ):
     code = subroutine_wrapper(b"""
     allocate(stat_checked_var(x,y,z), stat=u)
-    if (0/=z) call io_abort("bleh")
+    if (0/=z) call err_abort("bleh")
     """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 1
@@ -73,7 +73,7 @@ def test_allocate_stat_compound_condition_not_allowed(
     allocate(stat_checked_var(x,y,z), stat=u)
     if ("""
         + condition
-        + b""") call io_abort("bleh")
+        + b""") call err_abort("bleh")
     """
     )
     error_log = run_tests_on_code(parse(code), test_list, "filename")
@@ -85,7 +85,7 @@ def test_allocate_stat_correct_mixed_caps(
 ):
     code = subroutine_wrapper(b"""
     allocate(stat_checked_var(x,y,z), stat=u)
-    if (U/=0) call io_abort("bleh")
+    if (U/=0) call err_abort("bleh")
     """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 0, error_log.errors[0].message
@@ -96,7 +96,7 @@ def test_allocate_stat_correct_mixed_caps2(
 ):
     code = subroutine_wrapper(b"""
     allocate(stat_checked_var(x,y,z), stat=U)
-    if (u/=0) call io_abort("bleh")
+    if (u/=0) call err_abort("bleh")
     """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 0, error_log.errors[0].message
@@ -108,7 +108,7 @@ def test_allocate_stat_correct_comment(
     code = subroutine_wrapper(b"""
     allocate(stat_checked_var(x,y,z), stat=u)
     ! comment
-    if (u/=0) call io_abort("bleh")
+    if (u/=0) call err_abort("bleh")
     """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 0
@@ -161,7 +161,7 @@ def test_allocate_abort_correct(
 ):
     code = subroutine_wrapper(b"""
     allocate(stat_checked_var(x,y,z), stat=u)
-    if (u/=0) call io_allocate_abort("stat_checked_var", "x")
+    if (u/=0) call err_allocate_abort("stat_checked_var", "x")
     """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 0
@@ -172,7 +172,7 @@ def test_allocate_abort_wrong_var_name(
 ):
     code = subroutine_wrapper(b"""
     allocate(stat_checked_var(x,y,z), stat=u)
-    if (u/=0) call io_allocate_abort("wrong_var", "x")
+    if (u/=0) call err_allocate_abort("wrong_var", "x")
     """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 1
@@ -183,7 +183,7 @@ def test_allocate_abort_wrong_sub_name(
 ):
     code = subroutine_wrapper(b"""
     allocate(stat_checked_var(x,y,z), stat=u)
-    if (u/=0) call io_allocate_abort("stat_checked_var", "wrong_sub_name")
+    if (u/=0) call err_allocate_abort("stat_checked_var", "wrong_sub_name")
     """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 1
@@ -194,7 +194,7 @@ def test_allocate_abort_wrong_var_and_sub(
 ):
     code = subroutine_wrapper(b"""
     allocate(stat_checked_var(x,y,z), stat=u)
-    if (u/=0) call io_allocate_abort("wrong", "wrong_sub_name")
+    if (u/=0) call err_allocate_abort("wrong", "wrong_sub_name")
     """)
     error_log = run_tests_on_code(parse(code), test_list, "filename")
     assert len(error_log.errors) == 2
@@ -208,19 +208,12 @@ def abort_messages(parse: Parser, code: bytes) -> list[str]:
 @pytest.mark.parametrize(
     "handler",
     [
-        b'if (u/=0) call io_abort("failed")',
-        b'if (u/=0) call io_allocate_abort("arr", "x")',
         b'if (u/=0) call err_abort("failed")',
         b'if (u/=0) then\nwrite(*,*) "failed"\ncall err_abort("failed")\nend if',
         b'if (u/=0) call err_assert(.false., "failed")',
+        b'if (u/=0) call err_allocate_abort("arr", "x")',
     ],
-    ids=[
-        "io_abort",
-        "io_allocate_abort",
-        "err_abort",
-        "err_abort in block if",
-        "err_assert",
-    ],
+    ids=["err_abort", "err_abort in block if", "err_assert", "err_allocate_abort"],
 )
 def test_allocate_failure_stops_program(parse: Parser, subroutine_wrapper: CodeWrapper, handler):
     code = subroutine_wrapper(b"allocate(arr(n), stat=u)\n" + handler)
@@ -233,6 +226,8 @@ def test_allocate_failure_stops_program(parse: Parser, subroutine_wrapper: CodeW
         b'if (u/=0) call trace_log_error("failed", u)',
         b'if (u/=0) call memory_allocate_abort("arr", 8, "failed")',
         b"if (u/=0) call comms_abort()",
+        b'if (u/=0) call io_abort("failed")',
+        b'if (u/=0) call io_allocate_abort("arr", "x")',
         b"if (u/=0) then\nstatus = u\nreturn\nend if",
         b"if (u/=0) stop",
         b'if (u/=0) then\nwrite(*,*) "failed"\nerror stop 1\nend if',
@@ -241,6 +236,8 @@ def test_allocate_failure_stops_program(parse: Parser, subroutine_wrapper: CodeW
         "other routine",
         "other abort routine",
         "comms_abort",
+        "io_abort",
+        "io_allocate_abort",
         "return status",
         "stop",
         "error stop",
@@ -260,18 +257,18 @@ def test_allocate_failure_not_reported(parse: Parser, subroutine_wrapper: CodeWr
         (
             b"allocate(obj%arr(n), stat=u)",
             b"arr",
-            ["Wrong array name used in io_allocate_abort. Expected: obj%arr"],
+            ["Wrong array name used in err_allocate_abort. Expected: obj%arr"],
         ),
         (
             b"allocate(a(n), b(n), stat=u)",
             b"c",
-            ["Wrong array name used in io_allocate_abort. Expected: a or b"],
+            ["Wrong array name used in err_allocate_abort. Expected: a or b"],
         ),
         (b"allocate(param_type :: obj%param, stat=u)", b"obj%param", []),
         (
             b"allocate(param_type :: obj%param, stat=u)",
             b"param_type",
-            ["Wrong array name used in io_allocate_abort. Expected: obj%param"],
+            ["Wrong array name used in err_allocate_abort. Expected: obj%param"],
         ),
     ],
     ids=[
@@ -288,7 +285,7 @@ def test_allocate_abort_array_name(
     parse: Parser, subroutine_wrapper: CodeWrapper, allocate, array, errors
 ):
     code = subroutine_wrapper(
-        allocate + b'\nif (u/=0) call io_allocate_abort("' + array + b'", "x")'
+        allocate + b'\nif (u/=0) call err_allocate_abort("' + array + b'", "x")'
     )
     assert abort_messages(parse, code) == errors
 
@@ -298,7 +295,7 @@ def test_allocate_abort_names_in_variables_not_checked(
 ):
     code = subroutine_wrapper(b"""
     allocate(arr(n), stat=u)
-    if (u/=0) call io_allocate_abort(array_name, routine_name)
+    if (u/=0) call err_allocate_abort(array_name, routine_name)
     """)
     assert abort_messages(parse, code) == []
 
@@ -307,14 +304,14 @@ def test_allocate_abort_names_in_variables_not_checked(
     ("routine", "errors"),
     [
         (b"tool", []),
-        (b"x", ["Wrong subroutine name used in io_allocate_abort. Expected: tool"]),
+        (b"x", ["Wrong subroutine name used in err_allocate_abort. Expected: tool"]),
     ],
 )
 def test_allocate_abort_in_program(parse: Parser, routine, errors):
     code = (
         b"""program tool
     allocate(arr(n), stat=u)
-    if (u/=0) call io_allocate_abort("arr", \""""
+    if (u/=0) call err_allocate_abort("arr", \""""
         + routine
         + b"""\")
     end program tool"""
@@ -326,7 +323,7 @@ def test_allocate_abort_in_program(parse: Parser, routine, errors):
     ("disabled", "remaining"),
     [
         ("alloc_abort", ["Allocate status not checked"]),
-        ("alloc", ["Wrong subroutine name used in io_allocate_abort. Expected: x"]),
+        ("alloc", ["Wrong subroutine name used in err_allocate_abort. Expected: x"]),
     ],
 )
 def test_allocate_checks_disabled_separately(
@@ -335,7 +332,7 @@ def test_allocate_checks_disabled_separately(
     code = subroutine_wrapper(f"""
     ! castep-lint: disable={disabled}
     allocate(a(n), stat=u)
-    if (u/=0) call io_allocate_abort("a", "wrong")
+    if (u/=0) call err_allocate_abort("a", "wrong")
     allocate(b(n), stat=v)
     """.encode())
     error_log = run_tests_on_code(parse(code), {"allocate_statement": ALLOCATE_CHECKS}, "f")
@@ -344,7 +341,7 @@ def test_allocate_checks_disabled_separately(
 
 def by_variable(kind: str, variable: str, value: str, expected: str) -> str:
     return (
-        f"Wrong {kind} name used in io_allocate_abort "
+        f"Wrong {kind} name used in err_allocate_abort "
         f'by variable {variable}="{value}". Expected: {expected}'
     )
 
@@ -385,7 +382,7 @@ def test_allocate_abort_names_in_variables(
 ):
     code = subroutine_wrapper(
         declaration
-        + b"\nallocate(arr(n), stat=u)\nif (u/=0) call io_allocate_abort("
+        + b"\nallocate(arr(n), stat=u)\nif (u/=0) call err_allocate_abort("
         + abort
         + b")"
     )
@@ -398,7 +395,7 @@ def test_allocate_abort_name_in_dummy_argument_not_checked(parse: Parser):
     subroutine x(subname)
     character(len=*), intent(in) :: subname
     allocate(arr(n), stat=u)
-    if (u/=0) call io_allocate_abort("arr", subname)
+    if (u/=0) call err_allocate_abort("arr", subname)
     end subroutine x
     end module foo"""
     assert abort_messages(parse, code) == []
@@ -415,7 +412,7 @@ def test_allocate_abort_name_in_program_parameter(parse: Parser, value, errors):
         + value
         + b"""'
     allocate(arr(n), stat=u)
-    if (u/=0) call io_allocate_abort("arr", progname)
+    if (u/=0) call err_allocate_abort("arr", progname)
     end program tool"""
     )
     assert abort_messages(parse, code) == errors
@@ -426,3 +423,35 @@ def test_allocate_err_assert_does_not_check_stat(parse: Parser, subroutine_wrapp
     code = subroutine_wrapper(b'allocate(arr(n), stat=u)\ncall err_assert(u == 0, "failed")')
     error_log = run_tests_on_code(parse(code), {"allocate_statement": ALLOCATE_CHECKS}, "f")
     assert [e.message for e in error_log.errors] == ["Allocate status not checked"]
+
+
+@pytest.mark.parametrize(
+    ("abort", "errors"),
+    [
+        (b'"arr", "x"', []),
+        (
+            b'"other", "y"',
+            [
+                "Wrong array name used in err_allocate_abort. Expected: arr",
+                "Wrong subroutine name used in err_allocate_abort. Expected: x",
+            ],
+        ),
+        (
+            b"subname, routine_name=subname",
+            [
+                (
+                    "Wrong array name used in err_allocate_abort "
+                    'by variable subname="x". Expected: arr'
+                )
+            ],
+        ),
+    ],
+    ids=["correct", "wrong names", "names in variables"],
+)
+def test_err_allocate_abort_names(parse: Parser, subroutine_wrapper: CodeWrapper, abort, errors):
+    # err_allocate_abort takes the same arguments as err_allocate_abort, so is checked the same way
+    code = subroutine_wrapper(
+        b"character(len=*), parameter :: subname = 'x'\n"
+        b"allocate(arr(n), stat=u)\nif (u/=0) call err_allocate_abort(" + abort + b")"
+    )
+    assert abort_messages(parse, code) == errors
